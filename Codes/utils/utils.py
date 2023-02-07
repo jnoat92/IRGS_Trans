@@ -9,6 +9,7 @@ from functools import partial
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, jaccard_score, f1_score, accuracy_score
 import csv
 import time
+import wandb
 def Metrics(y_true, y_pred, method, output_folder, time_=None):
     
     acc = 100 * accuracy_score(y_true, y_pred)
@@ -52,13 +53,20 @@ def Metrics(y_true, y_pred, method, output_folder, time_=None):
             f.write('\n')
         f.write('\n\n')
 
+    wandb.log({
+        'OA':        acc,
+        'Precision': pre.mean(),
+        'Recall':    rec.mean(),
+        'F-Score':   f1s.mean(),
+        'IoU':       IoU.mean()
+    })
 
 class aux_obj(object):
     def __init__(self, init_value=None):
         self.train, self.val, self.test = 3*[init_value]
 
 def Parallel(function, iterable, *args):
-    n_cores = multiprocessing.cpu_count()
+    n_cores = multiprocessing.cpu_count()-1
     print('Configuring CPU multiprocessing...')
     print('Number of cores: %d'%(n_cores))
     p = multiprocessing.Pool(n_cores)
@@ -246,3 +254,11 @@ def boolean_string(s):
     if s not in {'False', 'True'}:
         raise ValueError('Not a valid boolean string')
     return s == 'True'
+
+def time_format(sec):
+   sec = sec % (24 * 3600)
+   hour = sec // 3600
+   sec %= 3600
+   min = sec // 60
+   sec %= 60
+   return "%02d:%02d:%02d" % (hour, min, sec) 

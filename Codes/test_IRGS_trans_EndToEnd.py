@@ -3,10 +3,11 @@ import torch
 import torch.utils.data as data
 import numpy as np
 import os, argparse
-from operator import truediv
+from config import Arguments_test
 
 from tqdm import tqdm
-from utils.dataloader import RadarSAT2_Dataset, irgs_segments_parallel, Extract_segments, Load_patches_segments
+from utils.dataloader import RadarSAT2_Dataset, irgs_segments_parallel, Extract_segments, \
+                             Load_patches_segments, Enhance_image
 from utils.utils import Metrics, Map_labels, hex_to_rgb, \
                         subplot_grid, boolean_string
 from major_voting import MV_per_CC, MV_per_Class
@@ -26,53 +27,10 @@ import copy
 import json
 import shutil
 import time
-from numba import cuda
+from numba import cuda, jit
+import numba
+import wandb
 
-
-def Arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--use_gpu', type=boolean_string, default=truediv, help='bool flag')
-
-    parser.add_argument('--batch_size', type=int, default=4, help='training batch size')
-    parser.add_argument('--patch_size', type=int, default=4000, help='input image size (square)')
-    parser.add_argument('--patch_overlap', type=float, default=0.2, help='Overlap between patches')
-
-    parser.add_argument('--token_size', type=int, default=16, help='sub-image/word size (square) for transformer input')
-    parser.add_argument('--num_heads', type=int, default=6, help='Number of heads on self-attention module')
-    parser.add_argument('--trans_depth', type=int, default=8, help='Number of transformer blocks')
-    parser.add_argument('--embed_dim', type=int, default=384, help='Embeding depth')
-
-    parser.add_argument('--mode', type=str, default='end_to_end', choices=['end_to_end', 'multi_stage'], help='.......')
-    parser.add_argument('--loss_term', type=str, default='end_to_end', choices=['end_to_end', 'transformer'], help='Specify loss terms for end_to_end approach')
-    parser.add_argument('--stage', type=str, default='cnn', choices=['cnn', 'transformer'], help='Specify loss terms for end_to_end approach')
-    parser.add_argument('--max_length', type=int, default=500, help='Maximum sequence length')
-    parser.add_argument('--mix_images', type=boolean_string, default=False, choices=['False'], help='Mix tokens from different images in the batch')
-    parser.add_argument('--random_tokens', type=boolean_string, default=False, choices=['False'], help='random/oredered tokens')
-
-    parser.add_argument('--CNN', type=str, default='UNet', help='CNN backbone')
-
-    parser.add_argument('--save_samples', type=boolean_string, default=False, help='If True, the samples will be saved in the HD to be loaded during training (It requires less RAM) \
-                                                                          If False, the samples are extracted directly from the scene (faster)')
-    # parser.add_argument('--Dataset_dir', type=str,
-    #                     default='../../Dataset/RADARSAT-2-CP/', help='dataset_path')
-    # parser.add_argument('--train_path', type=str,
-    #                     default='Scene58/', help='path to train dataset')
-    parser.add_argument('--Datasets_dir', type=str, default='../../Dataset/', help='datasets path')
-    parser.add_argument('--Dataset_name', type=str, default='21-scenes-less_resolution', help='dataset name')
-    parser.add_argument('--test_path', type=str, default='20110725', help='list of scenes separates by "_"')
-    parser.add_argument('--in_chans', type=int, default=2, help='Number of classes')
-    parser.add_argument('--n_classes', type=int, default=2, help='Number of classes')
-
-    parser.add_argument('--irgs_classes', type=int, default=10, help='Number of classes considered on IRGS')
-    parser.add_argument('--irgs_iter', type=int, default=100, help='Number of iterations on IRGS')
-    parser.add_argument('--token_option', type=str, default='superpixels', choices=['superpixels', 'clusters'], help='.......')
-    
-    parser.add_argument('--ckpt_path', type=str, default='../checkpoints/')
-    parser.add_argument('--model_name', type=str, default='model')
-    parser.add_argument('--save_path', type=str, default='../results_test/', help='path to save inference segmentation')
-
-    args = parser.parse_args()
-    return args
 
 def M_Voting(test_data, token_option, n_tokens, segments, cnn_pred, 
              landmask_idx, output_folder):
@@ -127,6 +85,30 @@ def M_Voting(test_data, token_option, n_tokens, segments, cnn_pred,
     print(print_line)
     '''
 
+
+def Build_Prediction_map_Sequential(tokens_ids, segments, logits):
+    
+    logits_map = np.zeros((segments.shape[0], segments.shape[1], logits.shape[1])).astype(logits.dtype)
+    for j in tqdm(range(len(tokens_ids)), ncols=50):
+        pos = segments == tokens_ids[j]
+        logits_map[pos] = logits[j]
+    return logits_map
+
+def Build_Prediction_map_CPU_parallel(tokens_ids, segments, logits):
+    print('CPU parallel...')
+    
+    @jit(nopython=True, parallel=True)
+    def CPU_parallel(tokens_ids, segments, logits):
+        logits_map = np.zeros((segments.shape[0], segments.shape[1], logits.shape[1])).astype(logits.dtype)
+        for j in numba.prange(len(tokens_ids)):
+            pos = np.where(segments == tokens_ids[j])
+            for k, l in zip(pos[0], pos[1]):
+                for m in range(logits.shape[1]):
+                    logits_map[k,l,m] = logits[j,m]
+        return logits_map
+    
+    return CPU_parallel(tokens_ids, segments, logits)
+        
 def Build_Prediction_map_GPU(tokens_ids, segments, logits, blocks_per_grid=32, threads_per_block=128):
 
     @cuda.jit
@@ -154,10 +136,11 @@ def Build_Prediction_map_GPU(tokens_ids, segments, logits, blocks_per_grid=32, t
     # cuda.synchronize()
     return logits_map_d.copy_to_host()
 
+
 def Inference(model, data_loader, Logits_ave, count_mat,
               args, patches_idx, device='cuda'):
 
-    assert args.stage in ['end_to_end', 'cnn', 'transformer'], \
+    assert args.stage in ['cnn', 'transformer'], \
         "Not valid stage value"
 
     model.eval()
@@ -171,7 +154,7 @@ def Inference(model, data_loader, Logits_ave, count_mat,
     for i in tqdm(range(n_batches), ncols=50):
 
         # ------------ Prepare data
-        images, gts, bckg, segments, n_tokens, boundaries = next(data_iterator)
+        images, gts, bckg, segments, n_tokens, _ = next(data_iterator)
 
         images = torch.permute(images, (0, 3, 1, 2)).float()
         gts = gts.long()
@@ -187,7 +170,7 @@ def Inference(model, data_loader, Logits_ave, count_mat,
         with torch.no_grad():
             cnn_logits, trans_logits, _, _, tokens_ids, seg = model(images, gts, copy.deepcopy(segments), n_tokens, 
                                                              stage=args.stage, device=device)
-        
+
         if args.stage == 'cnn': 
             logits_map = cnn_logits
         elif args.stage == 'transformer':
@@ -205,9 +188,10 @@ def Inference(model, data_loader, Logits_ave, count_mat,
                 sample_j_tokens = n_tokens[j] + (args.max_length-aux) if aux else n_tokens[j]
                 trans_logits = trans_logits[sample_j_tokens:]
             # BUILD PREDICTION MAP PER SAMPLE IMAGE
-            logits_map = Build_Prediction_map_GPU(tokens_ids.detach().cpu().numpy(), 
-                                                  seg.detach().cpu().numpy(), 
-                                                  nonpad_trans_logits.detach().cpu().numpy(), 
+            tokens_ids = tokens_ids.detach().cpu().numpy()
+            seg = seg.detach().cpu().numpy()
+            nonpad_trans_logits = nonpad_trans_logits.detach().cpu().numpy()
+            logits_map = Build_Prediction_map_GPU(tokens_ids, seg, nonpad_trans_logits, 
                                                   blocks_per_grid = 128, threads_per_block = 256)
             logits_map = torch.from_numpy(logits_map).to(device)
             logits_map = torch.permute(logits_map, (0, 3, 1, 2))
@@ -224,6 +208,7 @@ def Inference(model, data_loader, Logits_ave, count_mat,
     pred_map = torch.argmax(probs_map, 0)
 
     return probs_map.detach().cpu().numpy(), pred_map.detach().cpu().numpy()
+
 
 class Slide_patches_index(data.Dataset):
     def __init__(self, data, patch_size, overlap_percent):
@@ -310,9 +295,8 @@ class Slide_patches(data.Dataset):
 
 if __name__ == '__main__':
 
-    args = Arguments()
-    args.Datasets_dir += '/' + args.Dataset_name + '/'
-    args.test_path = args.test_path.split('_')
+    args = Arguments_test()
+
     if args.stage == 'cnn' and args.mode == 'end_to_end' and args.loss_term == 'transformer':
         raise AssertionError("Model trained using ONLY TRANSFORMER LOSS does not work for the cnn prediction")
 
@@ -322,79 +306,89 @@ if __name__ == '__main__':
                                         embed_dim=args.embed_dim, depth=args.trans_depth, 
                                         num_heads=args.num_heads)
     # ================ MERGE CNN - TRANSFORMER
-    irgs_trans_model = IRGS_Trans(cnn, transformer, args.max_length, 
+    model = IRGS_Trans(cnn, transformer, args.max_length, 
                                   args.mix_images, args.random_tokens)
-    irgs_trans_model.cuda()
-    # ic(next(irgs_trans_model.parameters()).device)
+    model.cuda()
+    # ic(next(model.parameters()).device)
 
 
 #%% ============== LOAD CHECKPOINT =============== #
     if args.mode == 'end_to_end':
         if args.loss_term == 'transformer':
             ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
-                                           irgs_trans_model.net_name + '_' + args.token_option, 
+                                           model.net_name + '_' + args.token_option, 
                                            'end_to_end', 'Loss_transformer', args.model_name)
             args.save_path =  os.path.join(args.save_path, args.Dataset_name, 
-                                           irgs_trans_model.net_name + '_' + args.token_option, 
+                                           model.net_name + '_' + args.token_option, 
                                            'end_to_end', 'Loss_transformer', args.model_name)
         else:
             ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
-                                           irgs_trans_model.net_name + '_' + args.token_option, 
+                                           model.net_name + '_' + args.token_option, 
                                            'end_to_end', 'Loss_end_to_end', args.model_name)
             args.save_path =  os.path.join(args.save_path, args.Dataset_name, 
-                                           irgs_trans_model.net_name + '_' + args.token_option, 
+                                           model.net_name + '_' + args.token_option, 
                                            'end_to_end', 'Loss_end_to_end', args.model_name)
         ckpt_CNN = ckpt_irgs_trans
     
+        project_name = '-'.join([model.net_name, args.token_option, args.mode, 'Loss_' + args.loss_term])
+        wandb.init(project=project_name, name=args.stage, group=args.model_name, job_type='test')
+
     elif args.mode == 'multi_stage':
         ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
-                                       irgs_trans_model.net_name + '_' + args.token_option, 'multi_stage', args.model_name)
-        if args.stage == 'transformer':
-            args.save_path =  os.path.join(args.save_path, args.Dataset_name, 
-                                        irgs_trans_model.net_name + '_' + args.token_option, 'multi_stage', args.model_name)
-        elif args.stage == 'cnn':
-            args.save_path =  os.path.join(args.save_path, args.Dataset_name, cnn.net_name, args.model_name)
-        
+                                       model.net_name + '_' + args.token_option, 'multi_stage', args.model_name)
         ckpt_CNN = os.path.join(args.ckpt_path, args.Dataset_name, cnn.net_name, args.model_name)
 
-    # ================ CNN
-    if os.path.exists('{}/{}_model.pt'.format(ckpt_CNN, irgs_trans_model.cnn.net_name)):
-        with open(ckpt_CNN + "/Log.txt", 'r') as f:
-            cnn_last_line = f.read().splitlines()[-1]
-            assert cnn_last_line in ["cnn training finished", "end_to_end training finished"], \
-                "*** The %s for network %s has NOT BEEN trained completely ***"%(args.model_name, irgs_trans_model.cnn.net_name)
+        if args.stage == 'transformer':
+            args.save_path =  os.path.join(args.save_path, args.Dataset_name, 
+                                        model.net_name + '_' + args.token_option, 'multi_stage', args.model_name)
+            project_name = '-'.join([model.net_name, args.token_option, args.mode])
+            wandb.init(project=project_name, name=args.stage, group=args.model_name, job_type='test')
 
-        checkpoint = torch.load('{}/{}_model.pt'.format(ckpt_CNN, irgs_trans_model.cnn.net_name))
-        irgs_trans_model.cnn.load_state_dict(checkpoint['model'])
-        print("===== {} Checkpoint loaded =====".format(irgs_trans_model.cnn.net_name))
+        elif args.stage == 'cnn':
+            args.save_path =  os.path.join(args.save_path, args.Dataset_name, cnn.net_name, args.model_name)
+            wandb.init(project=cnn.net_name, name=args.stage, group=args.model_name, job_type='test')
+        
+    # ================ CNN
+    if os.path.exists('{}/{}_model.pt'.format(ckpt_CNN, model.cnn.net_name)):
+        with open(ckpt_CNN + "/Log.txt", 'r') as f:
+            cnn_last_line = f.read().splitlines()[-9:]
+            assert "cnn training finished" in cnn_last_line or \
+                   "end_to_end training finished" in cnn_last_line, \
+                "*** The %s for network %s has NOT BEEN trained completely ***"%(args.model_name, model.cnn.net_name)
+
+        checkpoint = torch.load('{}/{}_model.pt'.format(ckpt_CNN, model.cnn.net_name), map_location=torch.device('cuda'))
+        model.cnn.load_state_dict(checkpoint['model'])
+        print("===== {} Checkpoint loaded =====".format(model.cnn.net_name))
 
         norm_params = joblib.load(ckpt_CNN + '/norm_params.pkl')
         
-    else: raise AssertionError("There is not checkpoint for {}".format(irgs_trans_model.cnn.net_name))
+    else: raise AssertionError("There is not checkpoint for {}".format(model.cnn.net_name))
 
     # ================ TRANSFORMER
     if not (args.mode == 'multi_stage' and args.stage == 'cnn'):
-        if os.path.exists('{}/{}_model.pt'.format(ckpt_irgs_trans, irgs_trans_model.transformer.net_name)):
+        if os.path.exists('{}/{}_model.pt'.format(ckpt_irgs_trans, model.transformer.net_name)):
             with open(ckpt_irgs_trans + "/Log.txt", 'r') as f:
-                trans_last_line = f.read().splitlines()[-1]
-                assert trans_last_line in ["transformer training finished", "end_to_end training finished"], \
-                    "*** The %s for network %s has NOT BEEN trained completely ***"%(args.model_name, irgs_trans_model.transformer.net_name)
+                trans_last_line = f.read().splitlines()[-9:]
+                assert "transformer training finished" in trans_last_line or \
+                       "end_to_end training finished" in trans_last_line, \
+                    "*** The %s for network %s has NOT BEEN trained completely ***"%(args.model_name, model.transformer.net_name)
 
-            checkpoint = torch.load('{}/{}_model.pt'.format(ckpt_irgs_trans, irgs_trans_model.transformer.net_name))
-            irgs_trans_model.transformer.load_state_dict(checkpoint['model'])
-            print("===== {} Checkpoint loaded =====".format(irgs_trans_model.transformer.net_name))
+            checkpoint = torch.load('{}/{}_model.pt'.format(ckpt_irgs_trans, model.transformer.net_name), map_location=torch.device('cuda'))
+            model.transformer.load_state_dict(checkpoint['model'])
+            print("===== {} Checkpoint loaded =====".format(model.transformer.net_name))
         
             norm_params = joblib.load(ckpt_irgs_trans + '/norm_params.pkl')
             
-        else: raise AssertionError("There is not checkpoint for {}".format(irgs_trans_model.transformer.net_name))
+        else: raise AssertionError("There is not checkpoint for {}".format(model.transformer.net_name))
 
-    if not args.use_gpu: irgs_trans_model.cpu()
-    irgs_trans_model.eval()
+    if not args.use_gpu: model.cpu()
+    model.eval()
 
 #%% ============== TESTING =============== #    
     for i in args.test_path:
         
         print('evaluating model: ', args.model_name)
+        
         output_folder = os.path.join(args.save_path, i)
         if args.mode == 'end_to_end' and args.loss_term == 'end_to_end':
             output_folder = os.path.join(output_folder, args.stage)
@@ -404,25 +398,30 @@ if __name__ == '__main__':
             json.dump(args.__dict__, f, indent=2)
                 
         # =========== LOAD DATA
-        test_data =  RadarSAT2_Dataset(args, name = i, phase="test")
+        test_data =  RadarSAT2_Dataset(args, name = i, set_="test")
         patches_idx = Slide_patches_index(copy.deepcopy(test_data), args.patch_size, args.patch_overlap)
         patches = Slide_patches(copy.deepcopy(test_data), patches_idx)
-        patches.save_samples(os.path.join('./results_test/Test_samples'))
+
+        scene_data_dir = './results_test/Test_samples/'
+        if os.path.exists('/home/' + os.getenv('LOGNAME') + '/scratch/'):
+            scene_data_dir = scene_data_dir + '_'.join(output_folder.split('/')[1:])
+            scene_data_dir = os.path.join('/home/' + os.getenv('LOGNAME') + '/scratch/', os.getenv('LOGNAME'), scene_data_dir[2:])
+        patches.save_samples(scene_data_dir)
 
         # =========== IMAGE SEGMENTATION USING IRGS
-        Extract_segments(patches, norm_params, args, use_landmask=False)
+        Extract_segments(patches, norm_params, args)
 
         # =========== NEW DATALOADERS MATCHING IMAGES + SEGMENTS
         patches_segments = Load_patches_segments(patches.file_paths)
         patches_segments_loader = data.DataLoader(dataset=patches_segments, batch_size=args.batch_size, 
-                                                  shuffle=False, num_workers=4)
+                                                  shuffle=False, num_workers=args.num_workers)
 
         # =========== INFERENCE
         device='cuda' if args.use_gpu else 'cpu'
         Logits_ave = torch.zeros((args.n_classes, test_data.image.shape[0], 
                                   test_data.image.shape[1])).to(device)
         count_mat = torch.zeros((test_data.image.shape[0], test_data.image.shape[1])).to(device)
-        probs_map, pred_map = Inference(irgs_trans_model, patches_segments_loader, Logits_ave, count_mat, 
+        probs_map, pred_map = Inference(model, patches_segments_loader, Logits_ave, count_mat, 
                                         args, patches_idx, device=device)
         
         # ============== METRICS 
@@ -432,8 +431,9 @@ if __name__ == '__main__':
         Metrics(y_true, y_pred, "Prediction-Map-%s          "%(args.stage), output_folder)
 
         # ------ SAVE IMAGE
-        Image.fromarray(np.uint8(test_data.image[:, :, 0])).save(output_folder + "/HH.png")
-        Image.fromarray(np.uint8(test_data.image[:, :, 1])).save(output_folder + "/HV.png")
+        image_enhanced = Enhance_image(test_data.image, test_data.background)
+        Image.fromarray(image_enhanced[:, :, 0]).save(output_folder + "/HH.png")
+        Image.fromarray(image_enhanced[:, :, 1]).save(output_folder + "/HV.png")
        
         # ------ SAVE GROUND TRUTH
         colored_gts = test_data.class_colors[test_data.gts.astype(int)+1]
@@ -470,7 +470,7 @@ if __name__ == '__main__':
             Image.fromarray(colored_irgs_output).save(output_folder + "/colored_irgs_output.png")
             
             Image.fromarray(255*np.uint8((landmask_idx==0)*(boundaries==-1))).save(output_folder + "/irgs_boundaries.png")
-            aux = np.uint8(test_data.image.repeat(3, axis=2)); aux[boundaries==-1] = 2*[255, 165, 0]
+            aux = np.uint8(image_enhanced.repeat(3, axis=2)); aux[boundaries==-1] = 2*[255, 165, 0]
             aux[landmask_idx] = 0
             Image.fromarray(aux[:,:,0:3]).save(output_folder + "/HH_boundaries.png")
             Image.fromarray(aux[:,:,3: ]).save(output_folder + "/HV_boundaries.png")

@@ -48,6 +48,28 @@ def filter_outliers(img, bins=2**16-1, bth=0.001, uth=0.999, train_pixels=None):
         
     return [np.array(min_value), np.array(max_value)]
 
+def median_filter(img, clips, mask):
+    kernel_size = 50
+    outliers = ((img < clips[0]) + (img > clips[1])) * np.expand_dims(mask, axis=2)
+    # plt.imshow(outliers[:,:,0], cmap='gray')
+    # plt.imshow(outliers[:,:,1], cmap='gray')
+    # plt.show()
+    out_idx = np.asarray(np.where(outliers))
+
+    img_ = img.copy()
+    for i in range(out_idx.shape[1]):
+        x = out_idx[0][i]
+        y = out_idx[1][i]
+        a = x - kernel_size//2 if x - kernel_size//2 >=0 else 0
+        c = y - kernel_size//2 if y - kernel_size//2 >=0 else 0
+        b = x + kernel_size//2 if x + kernel_size//2 <= img.shape[0] else img.shape[0]
+        d = y + kernel_size//2 if y + kernel_size//2 <= img.shape[1] else img.shape[1]
+        win = img[a:b, c:d][mask[a:b, c:d]==True]
+        img_[x, y] = np.median(win, axis=0)
+        # img_[x, y] = np.mean(win, axis=0)
+    
+    return img_
+
 class Min_Max_Norm_Denorm():
 
     def __init__(self, img, mask, feature_range=[-1, 1]):
@@ -55,8 +77,8 @@ class Min_Max_Norm_Denorm():
         self.feature_range = feature_range
         train_pixels = np.asarray(np.where(mask==0))
 
-        self.clips = filter_outliers(img.copy(), bins=2**16-1, bth=0.0005, uth=0.9995, train_pixels=train_pixels)
-        img = self.median_filter(img)
+        # self.clips = filter_outliers(img.copy(), bins=2**16-1, bth=0.0005, uth=0.9995, train_pixels=train_pixels)
+        # img = self.median_filter(img)
         
         self.min_val = np.nanmin(img[train_pixels[0], train_pixels[1]], axis=0)
         self.max_val = np.nanmax(img[train_pixels[0], train_pixels[1]], axis=0)
@@ -87,7 +109,7 @@ class Min_Max_Norm_Denorm():
         min_ = self.feature_range[0] - self.min_val * scale
         
         # img = self.clip_image(img)
-        img = self.median_filter(img)
+        # img = self.median_filter(img)
         img *= scale
         img += min_
         return img
@@ -101,7 +123,21 @@ class Min_Max_Norm_Denorm():
         img /= scale
         return img
 
+def Enhance_image(img, mask):
 
+    clips = filter_outliers(img.copy(), bins=2**16-1, bth=0.001, uth=0.999, 
+                            train_pixels=np.asarray(np.where(mask!=0)))
+    img = median_filter(img, clips, mask!=0)
+    
+    img[mask==0]=[img[:,:,0].min(), img[:,:,1].min()]
+
+    min_ = img[mask!=0].min(0)
+    max_ = img[mask!=0].max(0)
+    img = np.uint8(255*((img - min_) / (max_ - min_)))
+    img[mask == 0] = 0
+
+    return img
+    
 # ============   SET SPLIT   ============
 def Split_Image(rows=5989, cols=2985, no_tiles_h=5, no_tiles_w=5, val_tiles=None):
     '''
@@ -339,7 +375,7 @@ class RadarSAT2_Dataset():
     '''
     # def __init__(self, image_root, gt_root, args, name = 'scene_i', phase="train"):
     def __init__(self, args, validation_tiles=None, 
-                 name = 'scene_i', phase="train"):
+                 name = 'scene_i', set_="train"):
 
         self.name = name
         self.train_patches, self.val_patches, self.test_patches = [], [], []
@@ -351,7 +387,7 @@ class RadarSAT2_Dataset():
         self.image, self.gts,  self.background, \
             self.classes, self.class_colors = Load_21Scenes(scene_dir)
 
-        if phase == "train":
+        if set_ == "train":
             self.patch_size = args.patch_size
             self.patch_overlap = args.patch_overlap
             self.data_info_dir = args.data_info_dir
@@ -473,8 +509,9 @@ class RadarSAT2_Dataset():
 
         def save_routine(dir_, patches):
 
-            # Remove previous files
-            if os.path.exists(dir_): shutil.rmtree(dir_, ignore_errors=True)
+            if len(patches):
+                # Remove previous files
+                if os.path.exists(dir_): shutil.rmtree(dir_, ignore_errors=True)
             # Create directory
             try:
                 os.makedirs(dir_, exist_ok=True)
@@ -540,8 +577,8 @@ class Load_patches(data.Dataset):
         for i in sets_folders:
             self.file_paths.extend(glob.glob(i + '/' + folder + "/*.pkl"))
         
-        self.stage = stage
         self.data_augmentation = data_augmentation
+        # self.stage = stage
         # self.len = np.ceil(len(self.file_paths) / self.batch_size).astype(int)
         
         print("{} set size: {:0d}".format(stage, self.__len__()))
@@ -670,11 +707,7 @@ class Load_patches_on_the_fly(data.Dataset):
     def __len__(self):
         return len(self.patches)
 
-def Data_proc(args, sliding_window=True, norm = True, aug = True, padding=True):
-
-    # image_root = '{}/{}/all_bands.mat'.format(args.Dataset_dir, args.train_path)
-    # gt_root = '{}/{}/Model3_CNNPolarIRGS_colored/label_map.mat'.format(args.Dataset_dir, args.train_path)
-    
+def Calculate_norm_params(args):
     # Predefined validation tiles
     validation_tiles = pd.read_csv(args.data_info_dir  + '/validation_tiles.csv')
     validation_tiles = dict(zip(list(validation_tiles.columns),\
@@ -687,50 +720,48 @@ def Data_proc(args, sliding_window=True, norm = True, aug = True, padding=True):
         if norm_params is None:
             norm_params = train_data.norm
         else:
-            norm_params.clips[0] = np.minimum(norm_params.clips[0], train_data.norm.clips[0])
-            norm_params.clips[1] = np.maximum(norm_params.clips[1], train_data.norm.clips[1])
+            # norm_params.clips[0] = np.minimum(norm_params.clips[0], train_data.norm.clips[0])
+            # norm_params.clips[1] = np.maximum(norm_params.clips[1], train_data.norm.clips[1])
             norm_params.min_val  = np.minimum(norm_params.min_val , train_data.norm.min_val)
             norm_params.max_val  = np.maximum(norm_params.max_val , train_data.norm.max_val)
 
-    if norm:
-        joblib.dump(norm_params, args.ckpt_path + '/norm_params.pkl')
-    # else:
-    #     norm_params = joblib.load(args.ckpt_path + '/norm_params.pkl')
+    # joblib.dump(norm_params, args.ckpt_path + '/norm_params.pkl')
 
-    if args.save_samples:
-        # Save patches
-        sets_folders = []
-        for i in args.train_path:
-            scene_data_dir = os.path.join(args.data_info_dir, str(i), 'Patches')
-            sets_folders.append(scene_data_dir)
-            train_data =  RadarSAT2_Dataset(args, validation_tiles, name = i)
-            if sliding_window: train_data.define_sets(padding=padding)
-            else: train_data.define_sets_irgs_trans()
-            if norm:
-                train_data.image = norm_params.Normalize(train_data.image)
-            # train_data.save_patches(output_dir=scene_data_dir)
-        
-        Train_samples = Load_patches(sets_folders, stage="train", data_augmentation=aug)
-        Val_samples   = Load_patches(sets_folders, stage="validation", data_augmentation=False)
+    return norm_params
 
-    else:        
-        train_patches, val_patches = [], []
-        train_data = []
-        for i in range(len(args.train_path)):
-            train_data.append(RadarSAT2_Dataset(args, validation_tiles, name = args.train_path[i]))
-            if sliding_window: train_data[i].define_sets(padding=padding)
-            else: train_data[i].define_sets_irgs_trans()
-            if norm:
-                train_data[i].image = norm_params.Normalize(train_data[i].image)
-            for j in train_data[i].train_patches:
-                train_patches.append(tuple([i]) + j)
-            for j in train_data[i].val_patches:
-                val_patches.append(tuple([i]) + j)
-        
-        Train_samples = Load_patches_on_the_fly(train_data, train_patches, stage="train", data_augmentation=aug)
-        Val_samples   = Load_patches_on_the_fly(train_data, val_patches, stage="validation", data_augmentation=False)
+def Data_proc(args, set_='train', sliding_window=True, norm_params=None, aug=True, padding=True):
+
+    # Predefined validation tiles
+    validation_tiles = pd.read_csv(args.data_info_dir  + '/validation_tiles.csv')
+    validation_tiles = dict(zip(list(validation_tiles.columns),\
+                                validation_tiles.values.transpose()))
+    sets_folders = []
     
-    return Train_samples, Val_samples, norm_params
+    paths = args.train_path if set_ == 'train' else args.test_path
+    for i in paths:
+        # scene_data_dir = os.path.join(args.data_info_dir, args.model_name, str(i), 'Patches')
+        scene_data_dir = os.path.join(args.data_info_dir, str(i), 'Patches')
+        # SAVE PATCHES ON SCRATCH FOLDER 
+        if os.path.exists('/home/' + os.getenv('LOGNAME') + '/scratch/'):
+            scene_data_dir = os.path.join('/home/' + os.getenv('LOGNAME') + '/scratch/', os.getenv('LOGNAME'), scene_data_dir[3:])
+        sets_folders.append(scene_data_dir)
+
+        data =  RadarSAT2_Dataset(args, validation_tiles, name = i, set_=set_)
+        if set_ == 'train' and sliding_window: data.define_sets(padding=padding)
+        else: data.test_patches = Split_in_Patches_no_padding(args.patch_size, data.background)
+
+        if norm_params is not None:
+            data.image = norm_params.Normalize(data.image)
+
+        # SAVE PATCHES
+        if args.save_samples:
+            data.save_patches(output_dir=scene_data_dir)
+    
+    Train_samples = Load_patches(sets_folders, stage="train", data_augmentation=aug)
+    Val_samples   = Load_patches(sets_folders, stage="validation", data_augmentation=False)
+    Test_samples  = Load_patches(sets_folders, stage="test", data_augmentation=False)
+
+    return Train_samples, Val_samples, Test_samples
     
 
 # ============  DATA LOADER TOKENS  ============
@@ -814,7 +845,6 @@ def tokens_parallel(cnn, norm_params, sequence_dir, irgs_classes,
         data_dict["pad"]    = pad
         joblib.dump(data_dict, sequence_dir + "/{:05d}{:d}.pkl".format(i, j))
 
-    
 def Extract_token_sequence(cnn, norm_params, data_loader, output_folder, stage, args):
     
     cnn.cpu()                   # More RAM available for bigger input patches
@@ -845,7 +875,6 @@ def Extract_token_sequence(cnn, norm_params, data_loader, output_folder, stage, 
     p.close()
     p.join() 
 
-
 class Load_token_sequence(data.Dataset):
     
     def __init__(self, folder, stage='Tr'):
@@ -873,8 +902,9 @@ def irgs_segments_parallel(irgs_classes, irgs_iter, token_option, norm_params, u
     sample, file, i = item
     image, gts, bckg = sample
 
-    # ============== IRGS using HV band
-    img = np.uint8(image[:, :, 1])
+    # ============== IRGS
+    img = np.uint8(image[:, :, 1])        # using HV band
+    # img = np.uint8(image)
     mask = np.uint8(bckg*255)
     irgs_output, boundaries = IRGS(img, irgs_classes, irgs_iter, mask=None)
     if use_landmask:
@@ -897,7 +927,7 @@ def irgs_segments_parallel(irgs_classes, irgs_iter, token_option, norm_params, u
     
     # when the tokens are calculated on the fly (end-to-end approach)
     # the ids are changed so that they're exclusive among the sample images
-    # within a batch. In that sense, -1 ids need to be change first to infinite 
+    # within a batch. In that sense, -1 ids need to be changed first to infinite 
     # (the reason for this is restricted to the way the code was implemented)
     segments = segments.astype('float')
     segments[segments==-1] = np.inf
@@ -914,6 +944,14 @@ def irgs_segments_parallel(irgs_classes, irgs_iter, token_option, norm_params, u
         data_dict["bound"] = boundaries
         try:
             joblib.dump(data_dict, file)
+            # # just to check im-gt-bc-seg-boundaries alignment
+            # Image.fromarray(np.uint8(norm_params.Denormalize(image))).save(os.path.split(file)[0] + '/image.tif')
+            # Image.fromarray(np.uint8(gts*255/gts.max())).save(os.path.split(file)[0] + '/gts.tif')
+            # Image.fromarray(np.uint8(bckg*255)).save(os.path.split(file)[0] + '/bckg.tif')
+            # segments[segments==np.inf] = -1
+            # Image.fromarray(np.uint8(segments*255/(n_tokens+1))).save(os.path.split(file)[0] + '/segments.tif')
+            # Image.fromarray(255*np.uint8(boundaries==-1)).save(os.path.split(file)[0] + '/boundaries.tif')
+            # exit()
         except FileNotFoundError:
             print('FileNotFoundError exception handled...')
     
@@ -926,12 +964,13 @@ def Extract_segments(samples, norm_params, args, use_landmask=True):
     samples_iter = iter(samples)
     iterable = zip(samples_iter, samples.file_paths, range(samples_size))
 
-    # test line
-    # irgs_segments_parallel(args.irgs_classes, args.irgs_iter, 
-    #                        args.token_option, norm_params, use_landmask, next(iterable))
-
-    Parallel(irgs_segments_parallel, iterable, args.irgs_classes, 
-             args.irgs_iter, args.token_option, norm_params, use_landmask)
+    if samples_size > 1:
+        Parallel(irgs_segments_parallel, iterable, args.irgs_classes, 
+                args.irgs_iter, args.token_option, norm_params, use_landmask)
+    else:
+        # # test line
+        irgs_segments_parallel(args.irgs_classes, args.irgs_iter, 
+                            args.token_option, norm_params, use_landmask, next(iterable))
 
 class Load_patches_segments(data.Dataset):
     def __init__(self, file_paths):
