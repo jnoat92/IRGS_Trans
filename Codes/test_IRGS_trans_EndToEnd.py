@@ -428,8 +428,8 @@ if __name__ == '__main__':
         
         # ============== METRICS 
         landmask_idx = test_data.background==0
-        y_true = test_data.gts[landmask_idx]
-        y_pred = pred_map     [landmask_idx]
+        y_true = test_data.gts[landmask_idx==0]
+        y_pred = pred_map     [landmask_idx==0]
         Metrics(y_true, y_pred, "Prediction-Map-%s          "%(args.stage), output_folder)
 
         # ------ SAVE IMAGE
