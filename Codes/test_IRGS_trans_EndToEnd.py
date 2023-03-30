@@ -331,7 +331,6 @@ if __name__ == '__main__':
         ckpt_CNN = ckpt_irgs_trans
     
         project_name = '-'.join([model.net_name, args.token_option, args.mode, 'Loss_' + args.loss_term])
-        wandb.init(project=project_name, name=args.stage, group=args.model_name, job_type='test')
 
     elif args.mode == 'multi_stage':
         ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
@@ -342,12 +341,15 @@ if __name__ == '__main__':
             args.save_path =  os.path.join(args.save_path, args.Dataset_name, 
                                         model.net_name + '_' + args.token_option, 'multi_stage', args.model_name)
             project_name = '-'.join([model.net_name, args.token_option, args.mode])
-            wandb.init(project=project_name, name=args.stage, group=args.model_name, job_type='test')
 
         elif args.stage == 'cnn':
             args.save_path =  os.path.join(args.save_path, args.Dataset_name, cnn.net_name, args.model_name)
-            wandb.init(project=cnn.net_name, name=args.stage, group=args.model_name, job_type='test')
-        
+
+    if args.mode == 'multi_stage' and args.stage == 'cnn':
+        wandb.init(project=cnn.net_name, name=args.stage, group=args.model_name, job_type='test')
+    else:
+        wandb.init(project=project_name, name=args.stage, group=args.model_name, job_type='test')
+
     # ================ CNN
     if os.path.exists('{}/{}_model.pt'.format(ckpt_CNN, model.cnn.net_name)):
         with open(ckpt_CNN + "/Log.txt", 'r') as f:
@@ -457,6 +459,8 @@ if __name__ == '__main__':
                 segments, n_tokens, boundaries = irgs_segments_parallel(args.irgs_classes, args.irgs_iter, args.token_option, None, True, 
                                                                         ((test_data.image, 0, test_data.background), 0, 0))
                 segments[np.isinf(segments)] = -1
+            wandb.finish()
+            wandb.init(project=cnn.net_name, name=args.stage+'+MV', group=args.model_name, job_type='test')
             M_Voting(test_data, args.token_option, n_tokens, segments, pred_map, landmask_idx, output_folder)
 
         if len(patches_idx) == 1 or (args.mode == 'multi_stage' and args.stage == 'cnn'):
