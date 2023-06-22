@@ -7,17 +7,16 @@ exp=1   # multi-stage-transformer         time 10 hrs
 
 # # train
 # for i in {0..20}
-for i in {0..20}
-do
-    echo "executing train in model $i"
-    sbatch execute_train.sh $i 1 $exp
-    sleep 5
-done
-
-# # # test
-# for i in {0..20}
 # do
-#     echo "executing test in model $i"
-#     sbatch execute_test.sh $i 0 $exp
+#     echo "executing train in model $i"
+#     sbatch execute_train.sh $i 1 $exp
 #     sleep 5
 # done
+
+# # test
+for i in {0..20}
+do
+    echo "executing test in model $i"
+    sbatch execute_test.sh $i 0 $exp
+    sleep 5
+done

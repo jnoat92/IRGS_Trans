@@ -4,7 +4,7 @@
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=24 # change this parameter to 2,4,6,... and increase "--num_workers" accordingly to see the effect on performance
 #SBATCH --mem=128G
-#SBATCH --time=00:30:00
+#SBATCH --time=00:15:00
 #SBATCH --output=../output_logs/%j.out
 #SBATCH --account=def-dclausi
 #SBATCH --mail-user=jnoat92@gmail.com
