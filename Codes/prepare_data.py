@@ -10,6 +10,7 @@ if __name__ == '__main__':
     wandb.init(project='prepare_data')
 
     args = Arguments_train()
+
     dataset = aux_obj()
 
     # =========== TRAINING

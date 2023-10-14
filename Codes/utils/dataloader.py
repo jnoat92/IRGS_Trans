@@ -341,18 +341,23 @@ def Load_21Scenes(scene_dir):
     HV = np.asarray(Image.open(scene_dir + hv_file)).astype(float)
     image = np.concatenate((HH[..., np.newaxis], HV[..., np.newaxis]), axis=2)
 
-    gts_file = glob.glob(scene_dir + 'Max_labels/*.png')[0]
-    lbl = np.asarray(Image.open(gts_file))[:,:,0].astype(float)
-    # Map ground truth labels to 0, 1, 2
-    # Correcting interpolation effect in boundaries
-    gts = np.ones_like(lbl)
-    gts[np.abs(lbl) < 20 ] = 0
-    gts[np.abs(lbl - 149) < 20 ] = 1
-    gts[np.abs(lbl - 255) < 20 ] = 2
-    ###########
-    gts[gts==2] = 1 # consider all ice types in a single class
-    ###########
-    # Image.fromarray(np.uint8(self.gts*255/10)).save(scene_dir + 'Max_labels/labels_corrected_boundaries.tif')
+    # Noa Labels
+    gts_file = glob.glob(scene_dir + 'Noa_labels/*.png')[0]
+    gts = np.asarray(Image.open(gts_file)).astype(float)
+
+    # # Max Labels
+    # gts_file = glob.glob(scene_dir + 'Max_labels/*.png')[0]
+    # lbl = np.asarray(Image.open(gts_file))[:,:,0].astype(float)
+    # # Map ground truth labels to 0, 1, 2
+    # # Correcting interpolation effect in boundaries
+    # gts = np.ones_like(lbl)
+    # gts[np.abs(lbl) < 20 ] = 0
+    # gts[np.abs(lbl - 149) < 20 ] = 1
+    # gts[np.abs(lbl - 255) < 20 ] = 2
+    # ###########
+    # gts[gts==2] = 1 # consider all ice types in a single class
+    # ###########
+    # # Image.fromarray(np.uint8(self.gts*255/10)).save(scene_dir + 'Max_labels/labels_corrected_boundaries.tif')
     
     background = np.asarray(Image.open(scene_dir + 'landmask.bmp')).astype(float) / 255
     classes = ["Background", "Open water", "Young ice", "Multi-year ice", ]
@@ -448,8 +453,8 @@ class RadarSAT2_Dataset():
             sz_x = patches[i][2]
             sz_y = patches[i][3]
             mask[x : x + sz_x, y : y + sz_y] = 1.0
-        mask = mask[self.pad_tuple[0][0]:-self.pad_tuple[0][1],
-                    self.pad_tuple[1][0]:-self.pad_tuple[1][1]]
+        mask = mask[self.pad_tuple[0][0]: self.gts.shape[0]-self.pad_tuple[0][1],
+                    self.pad_tuple[1][0]: self.gts.shape[1]-self.pad_tuple[1][1]]
         Image.fromarray(np.uint8(mask*255)).save(self.filepath + "/mask_tr_0_vl_1_patches.png")
 
     def define_sets_irgs_trans(self):
@@ -945,12 +950,13 @@ def irgs_segments_parallel(irgs_classes, irgs_iter, token_option, norm_params, u
         try:
             joblib.dump(data_dict, file)
             # # just to check im-gt-bc-seg-boundaries alignment
-            # Image.fromarray(np.uint8(norm_params.Denormalize(image))).save(os.path.split(file)[0] + '/image.tif')
-            # Image.fromarray(np.uint8(gts*255/gts.max())).save(os.path.split(file)[0] + '/gts.tif')
-            # Image.fromarray(np.uint8(bckg*255)).save(os.path.split(file)[0] + '/bckg.tif')
+            # Image.fromarray(np.uint8(norm_params.Denormalize(image))[:,:,0]).save(os.path.split(file)[0] + '/hh.png')
+            # Image.fromarray(np.uint8(norm_params.Denormalize(image)[:,:,1])).save(os.path.split(file)[0] + '/hv.png')
+            # Image.fromarray(np.uint8(gts*255/gts.max())).save(os.path.split(file)[0] + '/gts.png')
+            # Image.fromarray(np.uint8(bckg*255)).save(os.path.split(file)[0] + '/bckg.png')
             # segments[segments==np.inf] = -1
-            # Image.fromarray(np.uint8(segments*255/(n_tokens+1))).save(os.path.split(file)[0] + '/segments.tif')
-            # Image.fromarray(255*np.uint8(boundaries==-1)).save(os.path.split(file)[0] + '/boundaries.tif')
+            # Image.fromarray(np.uint8(segments*255/(n_tokens+1))).save(os.path.split(file)[0] + '/segments.png')
+            # Image.fromarray(255*np.uint8(boundaries==-1)).save(os.path.split(file)[0] + '/boundaries.png')
             # exit()
         except FileNotFoundError:
             print('FileNotFoundError exception handled...')

@@ -30,7 +30,7 @@ def Arguments_train():
     parser.add_argument('--random_tokens', type=boolean_string, default=True, help='random/oredered tokens')
 
     # IRGS
-    parser.add_argument('--irgs_classes', type=int, default=100, help='Number of classes considered on IRGS')
+    parser.add_argument('--irgs_classes', type=int, default=50, help='Number of classes considered on IRGS')
     parser.add_argument('--irgs_iter', type=int, default=120, help='Number of iterations on IRGS')
     parser.add_argument('--token_option', type=str, default='superpixels', choices=['superpixels', 'clusters'], help='.......')
 
@@ -52,8 +52,8 @@ def Arguments_train():
     parser.add_argument('--in_chans', type=int, default=2, help='Number of bands')
     parser.add_argument('--n_classes', type=int, default=2, help='Number of classes')
 
-    parser.add_argument('--patch_size', type=int, default=128, help='input image size (square)')
-    parser.add_argument('--patch_overlap', type=float, default=0.3, help='Overlap between patches')
+    parser.add_argument('--patch_size', type=int, default=224, help='input image size (square)')
+    parser.add_argument('--patch_overlap', type=float, default=0.8, help='Overlap between patches')
     
     parser.add_argument('--data_info_dir', type=str, default='../data_info/')
     parser.add_argument('--ckpt_path', type=str, default='../checkpoints/')

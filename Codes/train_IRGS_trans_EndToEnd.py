@@ -536,9 +536,9 @@ def main(config=None):
     
     loader.train = data.DataLoader(dataset=dataset.train, batch_size=args.batch_size, shuffle=(sampler.train is None), 
                                    num_workers=args.num_workers-1, sampler=sampler.train)
-    loader.val = data.DataLoader(dataset=dataset.val, batch_size=args.batch_size, shuffle=False, 
+    loader.val = data.DataLoader(dataset=dataset.val, batch_size=args.batch_size, shuffle=True, 
                                    num_workers=args.num_workers-1, sampler=sampler.val)
-    loader.test = data.DataLoader(dataset=dataset.test, batch_size=args.batch_size, shuffle=False, 
+    loader.test = data.DataLoader(dataset=dataset.test, batch_size=args.batch_size, shuffle=True, 
                                    num_workers=args.num_workers-1, sampler=sampler.test)
 
 #%% ============== TRAINING =============== #

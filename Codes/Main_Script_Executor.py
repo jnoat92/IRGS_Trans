@@ -2,7 +2,7 @@
 No@
 """
 
-# 21 scenes experiments
+# 21 scenes 
 scenes = ['20100418', '20100426', '20100510', '20100524', '20100605', '20100623', '20100629', 
           '20100712', '20100721', '20100730', '20100807', '20100816', '20100907', '20100909', 
           '20101003', '20101021', '20101027', '20101114', '20101120', '20101206', '20101214']
@@ -11,6 +11,8 @@ new_test_scenes = ["20100704", "20101014", "20101017", "20101025", "20110530",
                    "20110613", "20110627", "20110709", "20110710", 
                    "20110720", "20110725", "20111006", "20111013", "20111029"]
 
+# 35 scenes 
+scenes = scenes + new_test_scenes
 
 import os
 from icecream import ic
@@ -41,9 +43,11 @@ multi_gpu_config = ''.join(multi_gpu_config)
 
 Schedule = []
 Schedule = ["wandb login e478171c2941cc8ddc5a71663e36f613042dfc6e"]
-# Schedule.append("wandb offline")
+Schedule.append("wandb offline")
 
 # # # ------------ PREPARE DATA
+# # scenes = scenes[:(len(scenes)//2)]
+# scenes = scenes[(len(scenes)//2):]
 # os.system("python prepare_data.py   --save_samples True \
 #                                     --train_path " + '_'.join(scenes) + " \
 #                                     --test_path "  + '_'.join(scenes)

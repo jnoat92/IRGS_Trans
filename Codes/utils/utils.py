@@ -66,7 +66,12 @@ class aux_obj(object):
         self.train, self.val, self.test = 3*[init_value]
 
 def Parallel(function, iterable, *args):
-    n_cores = multiprocessing.cpu_count()-1
+    '''
+    When the iterable is too long ~> 30000. Try to  distribute it 
+    in more than one run. Otherwise it takes too long to setup the 
+    parallel process.
+    '''
+    n_cores = multiprocessing.cpu_count() - 1
     print('Configuring CPU multiprocessing...')
     print('Number of cores: %d'%(n_cores))
     p = multiprocessing.Pool(n_cores)
