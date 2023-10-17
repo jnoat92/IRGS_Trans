@@ -4,4 +4,4 @@ Codes/wandb/
 data_info/
 results_test/
 
-*__pycache__*
+**/__pycache__/

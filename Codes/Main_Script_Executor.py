@@ -114,6 +114,18 @@ if True:
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
+        elif args.exp == 4:
+            Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
+                                                        --mode multi_stage \
+                                                        --stage end_to_end \
+                                                        --mix_images True \
+                                                        --random_tokens True \
+                                                        \
+                                                        --train_path " + train_scene + " \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+        
         # TRAIN - END - TO - END
         elif args.exp == 2:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
@@ -138,7 +150,7 @@ if True:
                                                         \
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
-    
+            
     else:
 
         # TEST - MULTI - STAGE
@@ -149,7 +161,7 @@ if True:
                                                         \
                                                         --mode multi_stage \
                                                         --stage cnn \
-                                                        --irgs_classes 10 \
+                                                        --irgs_classes 20 \
                                                         \
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))

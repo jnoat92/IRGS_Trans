@@ -68,7 +68,7 @@ def train(model, model_no_ddp, data_loader, epoch, ckpt_dir, args,
 
     # Data
     data_loader_size = len(data_loader)
-    sample_per_epochs = 5000
+    sample_per_epochs = 2000
     n_batches = min(sample_per_epochs//data_loader.batch_size, data_loader_size)
     data_iterator = iter(data_loader)
 
@@ -191,7 +191,7 @@ def test(model, data_loader, args, stage='end_to_end', loss_term=None, device='c
 
     # Data
     data_loader_size = len(data_loader)
-    sample_per_epochs = 5000
+    sample_per_epochs = 2000
     n_batches = min(sample_per_epochs//data_loader.batch_size, data_loader_size)
     data_iterator = iter(data_loader)
 
@@ -280,7 +280,7 @@ def Train_loop(loader, sampler, model, model_no_ddp, best_loss,
     #                             stage=stage, loss_term=loss_term, set_='Tr')
     stop_criteria = args.patience
 
-    while True:
+    while epoch <= args.epochs:
         epoch += 1
 
         if cnn_optimizer is not None: cr_lr = cnn_optimizer.param_groups[0]['lr']
@@ -354,7 +354,7 @@ def Train_loop(loader, sampler, model, model_no_ddp, best_loss,
             f.close()
 
         else: stop_criteria -= 1
-        if not stop_criteria:
+        if not stop_criteria or epoch == args.epochs:
             print_line = "{} training finished\n".format(stage)
             print(print_line)
             with open(ckpt_dir + "/Log.txt", "a") as f:
@@ -412,11 +412,12 @@ def main(config=None):
     # ================ OPTIMIZERS
     cnn_optimizer   = torch.optim.Adam(model_no_ddp.cnn.parameters(), args.lr, betas=(args.beta1, args.beta2))
     trans_optimizer = torch.optim.Adam(model_no_ddp.transformer.parameters(), args.lr, betas=(args.beta1, args.beta2))
-    # cnn_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(cnn_optimizer, factor=0.6, patience=10, verbose=True)
-    # trans_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(trans_optimizer, factor=0.6, patience=10, verbose=True)
+    cnn_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(cnn_optimizer, factor=0.6, patience=10, verbose=True)
+    trans_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(trans_optimizer, factor=0.6, patience=10, verbose=True)
     cnn_scheduler, trans_scheduler = None, None
 
 #%% ============== LOAD CHECKPOINT =============== #
+    ckpt_irgs_trans = ''
     if args.mode == 'end_to_end':
         if args.loss_term == 'transformer':
             ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
@@ -429,36 +430,26 @@ def main(config=None):
         ckpt_CNN = ckpt_irgs_trans
 
     elif args.mode == 'multi_stage':
-        ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
-                                    model_no_ddp.net_name + '_' + args.token_option, 'multi_stage', args.model_name)
+        if args.stage == 'end_to_end':
+            ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
+                                        model_no_ddp.net_name + '_' + args.token_option, 
+                                        'multi_stage', 'Loss_end_to_end', args.model_name)
+            print('ok')
+        elif args.stage == 'transformer':
+            ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
+                                        model_no_ddp.net_name + '_' + args.token_option, 
+                                        'multi_stage', 'Loss_transformer', args.model_name)
+
         ckpt_CNN = os.path.join(args.ckpt_path, args.Dataset_name, cnn.net_name, args.model_name)
 
+    # print(ckpt_irgs_trans)
+    # print(ckpt_CNN)
+    # exit()
     ckpt_CNN = os.path.join(ckpt_CNN, run_name)
     ckpt_irgs_trans = os.path.join(ckpt_irgs_trans, run_name)
-
     os.makedirs(ckpt_irgs_trans, exist_ok=True)
     os.makedirs(ckpt_CNN, exist_ok=True)
         
-    # ================ CNN
-    cnn_epoch = -1
-    cnn_best_lost = 2**16
-    cnn_trained = []
-    if os.path.exists('{}/{}_model.pt'.format(ckpt_CNN, model_no_ddp.cnn.net_name)):
-        checkpoint = torch.load('{}/{}_model.pt'.format(ckpt_CNN, model_no_ddp.cnn.net_name))
-        model_no_ddp.cnn.load_state_dict(checkpoint['model'])
-        cnn_optimizer.load_state_dict(checkpoint['optimizer'])
-        if cnn_scheduler is not None and 'scheduler' in checkpoint.keys():
-            cnn_scheduler.load_state_dict(checkpoint['scheduler'])
-        cnn_epoch = checkpoint['epoch']
-        cnn_best_lost = checkpoint['valid_loss']
-        print("===== {} Checkpoint loaded =====".format(model_no_ddp.cnn.net_name))
-        
-        with open(ckpt_CNN + "/Log.txt", 'r') as f:
-            cnn_trained = f.read().splitlines()[-(ngpus_per_node * args.nodes*2):]
-    
-    else:
-        print("There is not checkpoint for {}".format(model_no_ddp.cnn.net_name))
-
     # ================ TRANSFORMER
     epoch = -1
     best_lost = 2**16
@@ -474,9 +465,34 @@ def main(config=None):
         print("===== {} Checkpoint loaded =====".format(model_no_ddp.transformer.net_name))
         
         with open(ckpt_irgs_trans + "/Log.txt", 'r') as f:
-            trans_trained = f.read().splitlines()[-(ngpus_per_node * args.nodes*2):]
+            trans_trained = f.read().splitlines()[-(ngpus_per_node * args.nodes*2+1):]
     else:
         print("There is not checkpoint for {}".format(model_no_ddp.transformer.net_name))
+
+    # ================ CNN
+    if args.mode == 'multi_stage' and args.stage == 'end_to_end' and epoch > -1:
+        ckpt_CNN = ckpt_irgs_trans
+        
+    cnn_epoch = -1
+    cnn_best_lost = 2**16
+    cnn_trained = []
+    if os.path.exists('{}/{}_model.pt'.format(ckpt_CNN, model_no_ddp.cnn.net_name)):
+        checkpoint = torch.load('{}/{}_model.pt'.format(ckpt_CNN, model_no_ddp.cnn.net_name))
+        model_no_ddp.cnn.load_state_dict(checkpoint['model'])
+        cnn_optimizer.load_state_dict(checkpoint['optimizer'])
+        if cnn_scheduler is not None and 'scheduler' in checkpoint.keys():
+            cnn_scheduler.load_state_dict(checkpoint['scheduler'])
+        cnn_epoch = checkpoint['epoch']
+        cnn_best_lost = checkpoint['valid_loss']
+        print("===== {} Checkpoint loaded =====".format(model_no_ddp.cnn.net_name))
+        
+        with open(ckpt_CNN + "/Log.txt", 'r') as f:
+            cnn_trained = f.read().splitlines()[-(ngpus_per_node * args.nodes*2 +1):]
+    
+    else:
+        print("There is not checkpoint for {}".format(model_no_ddp.cnn.net_name))
+
+
 
     # ================ CHECK IF THE MODELS WERE ALREADY COMPLETELY TRAINED
     assert "end_to_end training finished" not in trans_trained, \
@@ -531,14 +547,14 @@ def main(config=None):
 #%% ============== DATALOADERS =============== #
     if ngpus_per_node > 1:
         sampler.train = torch.utils.data.distributed.DistributedSampler(dataset.train, shuffle=True)
-        sampler.val   = torch.utils.data.distributed.DistributedSampler(dataset.val,   shuffle=False)
+        sampler.val   = torch.utils.data.distributed.DistributedSampler(dataset.val,   shuffle=True)
         sampler.test  = torch.utils.data.distributed.DistributedSampler(dataset.test,  shuffle=False)
     
     loader.train = data.DataLoader(dataset=dataset.train, batch_size=args.batch_size, shuffle=(sampler.train is None), 
                                    num_workers=args.num_workers-1, sampler=sampler.train)
-    loader.val = data.DataLoader(dataset=dataset.val, batch_size=args.batch_size, shuffle=True, 
+    loader.val = data.DataLoader(dataset=dataset.val, batch_size=args.batch_size, shuffle=(sampler.val is None), 
                                    num_workers=args.num_workers-1, sampler=sampler.val)
-    loader.test = data.DataLoader(dataset=dataset.test, batch_size=args.batch_size, shuffle=True, 
+    loader.test = data.DataLoader(dataset=dataset.test, batch_size=args.batch_size, shuffle=False, 
                                    num_workers=args.num_workers-1, sampler=sampler.test)
 
 #%% ============== TRAINING =============== #
@@ -579,6 +595,20 @@ def main(config=None):
         _, _, _, _ = Train_loop(loader, sampler, model, model_no_ddp, best_lost,
                                 None, None, trans_optimizer, trans_scheduler,
                                 args, ckpt_irgs_trans, epoch, stage='transformer')
+        
+    elif args.stage == 'end_to_end':
+
+        if not args.sweep:
+            project_name = '-'.join([model_no_ddp.net_name, args.token_option, args.mode, 'Loss_' + 'end_to_end'])
+            wandb.init(project=project_name, name=args.model_name + '-' + str(rank), group=args.model_name, job_type='train')
+
+        with open(ckpt_irgs_trans + '/commandline_args.txt', 'w') as f:
+            json.dump(args.__dict__, f, indent=2)
+
+        _, _, _, _ = Train_loop(loader, sampler, model, model_no_ddp, best_lost,
+                             cnn_optimizer, cnn_scheduler, trans_optimizer, trans_scheduler,
+                             args, ckpt_irgs_trans, epoch, stage='end_to_end', loss_term='end_to_end')
+
     
 
 if __name__ == '__main__':

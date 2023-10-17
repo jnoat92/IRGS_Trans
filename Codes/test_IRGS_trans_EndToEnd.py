@@ -333,14 +333,30 @@ if __name__ == '__main__':
         project_name = '-'.join([model.net_name, args.token_option, args.mode, 'Loss_' + args.loss_term])
 
     elif args.mode == 'multi_stage':
-        ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
-                                       model.net_name + '_' + args.token_option, 'multi_stage', args.model_name)
         ckpt_CNN = os.path.join(args.ckpt_path, args.Dataset_name, cnn.net_name, args.model_name)
 
-        if args.stage == 'transformer':
+        if args.stage == 'end_to_end':
+            ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
+                                        model.net_name + '_' + args.token_option, 
+                                        'multi_stage', 'Loss_end_to_end', args.model_name)
+
             args.save_path =  os.path.join(args.save_path, args.Dataset_name, 
-                                        model.net_name + '_' + args.token_option, 'multi_stage', args.model_name)
-            project_name = '-'.join([model.net_name, args.token_option, args.mode])
+                                        model.net_name + '_' + args.token_option, 
+                                        'multi_stage', 'Loss_end_to_end', args.model_name)
+            project_name = '-'.join([model.net_name, args.token_option, args.mode, args.stage])
+
+        elif args.stage == 'transformer':
+            ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
+                                            model.net_name + '_' + args.token_option, 
+                                            'multi_stage', 'Loss_transformer', args.model_name)
+            # ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
+            #                                model.net_name + '_' + args.token_option, 'multi_stage', args.model_name)
+            # args.save_path =  os.path.join(args.save_path, args.Dataset_name, 
+            #                             model.net_name + '_' + args.token_option, 'multi_stage', args.model_name)
+            args.save_path =  os.path.join(args.save_path, args.Dataset_name, 
+                                        model.net_name + '_' + args.token_option, 
+                                        'multi_stage', 'Loss_transformer', args.model_name)
+            project_name = '-'.join([model.net_name, args.token_option, args.mode, args.stage])
 
         elif args.stage == 'cnn':
             args.save_path =  os.path.join(args.save_path, args.Dataset_name, cnn.net_name, args.model_name)

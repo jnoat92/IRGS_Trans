@@ -16,7 +16,7 @@ def Arguments_train():
     parser.add_argument('--init_method', default='tcp://127.0.0.1:3456', type=str, help='')
     parser.add_argument('--dist_backend', default='gloo', type=str, help='')
     parser.add_argument('--world_size', default=1, type=int, help='')
-    parser.add_argument('--num_workers', default=0, type=int, help='')    
+    parser.add_argument('--num_workers', default=8, type=int, help='')    
     parser.add_argument('--nodes', default=1, type=int, help='')    
     # ===================================================
 
@@ -61,7 +61,7 @@ def Arguments_train():
     # ===================================================
 
     parser.add_argument('--sweep', type=boolean_string, default=False, help='hyperparameter tunning mode')
-    # parser.add_argument('--epochs', type=int, default=50, help='epoch number')
+    parser.add_argument('--epochs', type=int, default=50, help='epoch number')
     parser.add_argument('--patience', type=int, default=15, help='number of epochs after no improvements (stop criteria)')
     parser.add_argument('--grad_norm', type=float, default=2.0, help='gradient clipping norm')
     parser.add_argument('--beta1', type=float, default=0.5, help='beta1 of adam optimizer')
@@ -86,14 +86,14 @@ def Arguments_test():
 
     # ================ IRGS-TRANS CONFIG ==========
     parser.add_argument('--mode', type=str, default='end_to_end', choices=['end_to_end', 'multi_stage'], help='.......')
-    parser.add_argument('--stage', type=str, default='cnn', choices=['cnn', 'transformer'], help='Specify loss terms for end_to_end approach')
+    parser.add_argument('--stage', type=str, default='cnn', choices=['cnn', 'transformer', 'end_to_end'], help='stage for multi-stage approach')
     parser.add_argument('--loss_term', type=str, default='end_to_end', choices=['end_to_end', 'transformer'], help='Specify loss terms for end_to_end approach')
     parser.add_argument('--max_length', type=int, default=400, help='Maximum sequence length')
     parser.add_argument('--mix_images', type=boolean_string, default=False, choices=['False'], help='Mix tokens from different images in the batch')
     parser.add_argument('--random_tokens', type=boolean_string, default=False, choices=['False'], help='random/oredered tokens')
 
     # IRGS
-    parser.add_argument('--irgs_classes', type=int, default=10, help='Number of classes considered on IRGS')
+    parser.add_argument('--irgs_classes', type=int, default=20, help='Number of classes considered on IRGS')
     parser.add_argument('--irgs_iter', type=int, default=120, help='Number of iterations on IRGS')
     parser.add_argument('--token_option', type=str, default='superpixels', choices=['superpixels', 'clusters'], help='.......')
 
