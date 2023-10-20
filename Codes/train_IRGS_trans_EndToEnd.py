@@ -434,7 +434,6 @@ def main(config=None):
             ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
                                         model_no_ddp.net_name + '_' + args.token_option, 
                                         'multi_stage', 'Loss_end_to_end', args.model_name)
-            print('ok')
         elif args.stage == 'transformer':
             ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
                                         model_no_ddp.net_name + '_' + args.token_option, 
@@ -442,9 +441,6 @@ def main(config=None):
 
         ckpt_CNN = os.path.join(args.ckpt_path, args.Dataset_name, cnn.net_name, args.model_name)
 
-    # print(ckpt_irgs_trans)
-    # print(ckpt_CNN)
-    # exit()
     ckpt_CNN = os.path.join(ckpt_CNN, run_name)
     ckpt_irgs_trans = os.path.join(ckpt_irgs_trans, run_name)
     os.makedirs(ckpt_irgs_trans, exist_ok=True)
@@ -586,7 +582,7 @@ def main(config=None):
     elif args.stage == 'transformer':
 
         if not args.sweep:
-            project_name = '-'.join([model_no_ddp.net_name, args.token_option, args.mode])
+            project_name = '-'.join([model_no_ddp.net_name, args.token_option, args.mode, 'Loss_transformer'])
             wandb.init(project=project_name, name=args.model_name + '-' + str(rank), group=args.model_name, job_type='train')
 
         with open(ckpt_irgs_trans + '/commandline_args.txt', 'w') as f:

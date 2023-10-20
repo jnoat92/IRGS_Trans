@@ -95,6 +95,7 @@ if True:
         # # TRAIN - MULTI - STAGE
         if args.exp == 0:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
+                                                        --num_workers " + str(args.num_workers) + " \
                                                         --mode multi_stage \
                                                         --stage cnn \
                                                         \
@@ -105,6 +106,7 @@ if True:
 
         elif args.exp == 1:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
+                                                        --num_workers " + str(args.num_workers) + " \
                                                         --mode multi_stage \
                                                         --stage transformer \
                                                         --mix_images True \
@@ -116,6 +118,7 @@ if True:
                             )
         elif args.exp == 4:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
+                                                        --num_workers " + str(args.num_workers) + " \
                                                         --mode multi_stage \
                                                         --stage end_to_end \
                                                         --mix_images True \
@@ -129,6 +132,7 @@ if True:
         # TRAIN - END - TO - END
         elif args.exp == 2:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
+                                                        --num_workers " + str(args.num_workers) + " \
                                                         --mode end_to_end \
                                                         --loss_term end_to_end \
                                                         --mix_images True \
@@ -141,6 +145,7 @@ if True:
 
         elif args.exp == 3:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
+                                                        --num_workers " + str(args.num_workers) + " \
                                                         --mode end_to_end \
                                                         --loss_term transformer \
                                                         --mix_images True \
@@ -161,7 +166,7 @@ if True:
                                                         \
                                                         --mode multi_stage \
                                                         --stage cnn \
-                                                        --irgs_classes 20 \
+                                                        --irgs_classes 15 \
                                                         \
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
@@ -174,11 +179,37 @@ if True:
                                                         \
                                                         --mode multi_stage \
                                                         --stage transformer \
-                                                        --irgs_classes 10 \
+                                                        --irgs_classes 15 \
                                                         \
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
+        elif args.exp == 4:
+            Schedule.append("python test_IRGS_trans_EndToEnd.py \
+                                                        --num_workers " + str(args.num_workers) + " \
+                                                        --use_gpu True \
+                                                        \
+                                                        --mode multi_stage \
+                                                        --loss_term end_to_end\
+                                                        --stage cnn \
+                                                        --irgs_classes 15 \
+                                                        \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+            Schedule.append("python test_IRGS_trans_EndToEnd.py \
+                                                        --num_workers " + str(args.num_workers) + " \
+                                                        --use_gpu True \
+                                                        \
+                                                        --mode multi_stage \
+                                                        --loss_term end_to_end\
+                                                        --stage transformer \
+                                                        --irgs_classes 15 \
+                                                        \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+
         # TEST - END - TO - END
         elif args.exp == 2:
             Schedule.append("python test_IRGS_trans_EndToEnd.py \
@@ -188,7 +219,7 @@ if True:
                                                         --mode end_to_end \
                                                         --loss_term end_to_end \
                                                         --stage cnn \
-                                                        --irgs_classes 10 \
+                                                        --irgs_classes 15 \
                                                         \
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
@@ -200,7 +231,7 @@ if True:
                                                         --mode end_to_end \
                                                         --loss_term end_to_end \
                                                         --stage transformer \
-                                                        --irgs_classes 10 \
+                                                        --irgs_classes 15 \
                                                         \
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
@@ -213,7 +244,7 @@ if True:
                                                         --mode end_to_end \
                                                         --loss_term transformer \
                                                         --stage transformer \
-                                                        --irgs_classes 10 \
+                                                        --irgs_classes 15 \
                                                         \
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
