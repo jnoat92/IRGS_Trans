@@ -414,7 +414,7 @@ def main(config=None):
     trans_optimizer = torch.optim.Adam(model_no_ddp.transformer.parameters(), args.lr, betas=(args.beta1, args.beta2))
     cnn_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(cnn_optimizer, factor=0.6, patience=10, verbose=True)
     trans_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(trans_optimizer, factor=0.6, patience=10, verbose=True)
-    cnn_scheduler, trans_scheduler = None, None
+    # # cnn_scheduler, trans_scheduler = None, None
 
 #%% ============== LOAD CHECKPOINT =============== #
     ckpt_irgs_trans = ''

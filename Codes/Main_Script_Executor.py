@@ -92,8 +92,8 @@ if True:
 
 # # # ------------ Experiments --------------------------------------------------------------- #
     if args.train:
-        # # TRAIN - MULTI - STAGE
-        if args.exp == 0:
+        # TRAIN
+        if   args.exp == 1:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
                                                         --num_workers " + str(args.num_workers) + " \
                                                         --mode multi_stage \
@@ -104,7 +104,20 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-        elif args.exp == 1:
+        elif args.exp == 2:
+            Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
+                                                        --num_workers " + str(args.num_workers) + " \
+                                                        --mode end_to_end \
+                                                        --loss_term transformer \
+                                                        --mix_images True \
+                                                        --random_tokens True \
+                                                        --train_path " + train_scene + " \
+                                                        --test_path " + test_scene + " \
+                                                        \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+
+        elif args.exp == 3:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
                                                         --num_workers " + str(args.num_workers) + " \
                                                         --mode multi_stage \
@@ -116,6 +129,7 @@ if True:
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
+        
         elif args.exp == 4:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
                                                         --num_workers " + str(args.num_workers) + " \
@@ -129,8 +143,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
         
-        # TRAIN - END - TO - END
-        elif args.exp == 2:
+        elif args.exp == 5:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
                                                         --num_workers " + str(args.num_workers) + " \
                                                         --mode end_to_end \
@@ -143,23 +156,10 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-        elif args.exp == 3:
-            Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
-                                                        --num_workers " + str(args.num_workers) + " \
-                                                        --mode end_to_end \
-                                                        --loss_term transformer \
-                                                        --mix_images True \
-                                                        --random_tokens True \
-                                                        --train_path " + train_scene + " \
-                                                        --test_path " + test_scene + " \
-                                                        \
-                                                        --model_name " + "model_{}".format(str(model_id))
-                            )
             
     else:
-
-        # TEST - MULTI - STAGE
-        if args.exp == 0:
+        # TEST
+        if   args.exp == 1:
             Schedule.append("python test_IRGS_trans_EndToEnd.py \
                                                         --num_workers " + str(args.num_workers) + " \
                                                         --use_gpu True \
@@ -172,7 +172,21 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-        elif args.exp == 1:
+        elif args.exp == 2:
+            Schedule.append("python test_IRGS_trans_EndToEnd.py \
+                                                        --num_workers " + str(args.num_workers) + " \
+                                                        --use_gpu True \
+                                                        \
+                                                        --mode end_to_end \
+                                                        --loss_term transformer \
+                                                        --stage transformer \
+                                                        --irgs_classes 15 \
+                                                        \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+
+        elif args.exp == 3:
             Schedule.append("python test_IRGS_trans_EndToEnd.py \
                                                         --num_workers " + str(args.num_workers) + " \
                                                         --use_gpu True \
@@ -184,6 +198,7 @@ if True:
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
+        
         elif args.exp == 4:
             Schedule.append("python test_IRGS_trans_EndToEnd.py \
                                                         --num_workers " + str(args.num_workers) + " \
@@ -210,8 +225,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-        # TEST - END - TO - END
-        elif args.exp == 2:
+        elif args.exp == 5:
             Schedule.append("python test_IRGS_trans_EndToEnd.py \
                                                         --num_workers " + str(args.num_workers) + " \
                                                         --use_gpu True \
@@ -230,19 +244,6 @@ if True:
                                                         \
                                                         --mode end_to_end \
                                                         --loss_term end_to_end \
-                                                        --stage transformer \
-                                                        --irgs_classes 15 \
-                                                        \
-                                                        --test_path " + test_scene + " \
-                                                        --model_name " + "model_{}".format(str(model_id))
-                            )
-        elif args.exp == 3:
-            Schedule.append("python test_IRGS_trans_EndToEnd.py \
-                                                        --num_workers " + str(args.num_workers) + " \
-                                                        --use_gpu True \
-                                                        \
-                                                        --mode end_to_end \
-                                                        --loss_term transformer \
                                                         --stage transformer \
                                                         --irgs_classes 15 \
                                                         \
