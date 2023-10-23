@@ -53,13 +53,11 @@ def Metrics(y_true, y_pred, method, output_folder, time_=None):
             f.write('\n')
         f.write('\n\n')
 
-    wandb.log({
-        'OA':        acc,
-        'Precision': pre.mean(),
-        'Recall':    rec.mean(),
-        'F-Score':   f1s.mean(),
-        'IoU':       IoU.mean()
-    })
+    wandb.summary[method.split(' ')[0] + '-OA']         = acc
+    wandb.summary[method.split(' ')[0] + '-Precision']  = pre.mean()
+    wandb.summary[method.split(' ')[0] + '-Recall']     = rec.mean()
+    wandb.summary[method.split(' ')[0] + '-F-Score']    = f1s.mean()
+    wandb.summary[method.split(' ')[0] + '-IoU']        = IoU.mean()
 
 class aux_obj(object):
     def __init__(self, init_value=None):

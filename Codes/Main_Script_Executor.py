@@ -165,6 +165,7 @@ if True:
                                                         --use_gpu True \
                                                         \
                                                         --mode multi_stage \
+                                                        --loss_term cnn \
                                                         --stage cnn \
                                                         --irgs_classes 15 \
                                                         \
@@ -192,7 +193,7 @@ if True:
                                                         --use_gpu True \
                                                         \
                                                         --mode multi_stage \
-                                                        --stage transformer \
+                                                        --loss_term transformer \
                                                         --irgs_classes 15 \
                                                         \
                                                         --test_path " + test_scene + " \

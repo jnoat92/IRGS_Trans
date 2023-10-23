@@ -334,7 +334,7 @@ if __name__ == '__main__':
 
     elif args.mode == 'multi_stage':
 
-        if args.stage == 'end_to_end':
+        if args.loss_term == 'end_to_end':
             ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
                                         model.net_name + '_' + args.token_option, 
                                         'multi_stage', 'Loss_end_to_end', args.model_name)
@@ -343,9 +343,9 @@ if __name__ == '__main__':
             args.save_path =  os.path.join(args.save_path, args.Dataset_name, 
                                         model.net_name + '_' + args.token_option, 
                                         'multi_stage', 'Loss_end_to_end', args.model_name)
-            project_name = '-'.join([model.net_name, args.token_option, args.mode, args.stage])
+            project_name = '-'.join([model.net_name, args.token_option, args.mode, 'Loss_' + args.loss_term])
 
-        elif args.stage == 'transformer':
+        elif args.loss_term == 'transformer':
             ckpt_irgs_trans = os.path.join(args.ckpt_path, args.Dataset_name, 
                                             model.net_name + '_' + args.token_option, 
                                             'multi_stage', 'Loss_transformer', args.model_name)
@@ -354,16 +354,25 @@ if __name__ == '__main__':
             args.save_path =  os.path.join(args.save_path, args.Dataset_name, 
                                         model.net_name + '_' + args.token_option, 
                                         'multi_stage', 'Loss_transformer', args.model_name)
-            project_name = '-'.join([model.net_name, args.token_option, args.mode, args.stage])
+            project_name = '-'.join([model.net_name, args.token_option, args.mode, 'Loss_' + args.loss_term])
 
-        elif args.stage == 'cnn':
+            args.stage = 'transformer'
+
+        elif args.loss_term == 'cnn':
             ckpt_CNN = os.path.join(args.ckpt_path, args.Dataset_name, cnn.net_name, args.model_name)
             args.save_path =  os.path.join(args.save_path, args.Dataset_name, cnn.net_name, args.model_name)
+            
+            project_name = cnn.net_name
+            args.stage = 'cnn'
+            
+    # ic(ckpt_CNN)
+    # ic(ckpt_irgs_trans)
+    # ic(project_name)
+    # ic(args.stage)
+    # ic(args.save_path)
+    # exit()
 
-    if args.mode == 'multi_stage' and args.stage == 'cnn':
-        wandb.init(project=cnn.net_name, name=args.stage, group=args.model_name, job_type='test')
-    else:
-        wandb.init(project=project_name, name=args.stage, group=args.model_name, job_type='test')
+    wandb.init(project=project_name, name=args.stage, group=args.model_name, job_type='test')
 
     # ================ CNN
     if os.path.exists('{}/{}_model.pt'.format(ckpt_CNN, model.cnn.net_name)):
@@ -407,8 +416,10 @@ if __name__ == '__main__':
         print('evaluating model: ', args.model_name)
         
         output_folder = os.path.join(args.save_path, i)
+
         if args.loss_term == 'end_to_end':
             output_folder = os.path.join(output_folder, args.stage)
+
         if os.path.exists(output_folder): shutil.rmtree(output_folder)
         os.makedirs(output_folder, exist_ok=True)
         with open(output_folder + '/commandline_args.txt', 'w') as f:

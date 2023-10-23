@@ -87,7 +87,7 @@ def Arguments_test():
     # ================ IRGS-TRANS CONFIG ==========
     parser.add_argument('--mode', type=str, default='end_to_end', choices=['end_to_end', 'multi_stage'], help='.......')
     parser.add_argument('--stage', type=str, default='cnn', choices=['cnn', 'transformer', 'end_to_end'], help='stage for multi-stage approach')
-    parser.add_argument('--loss_term', type=str, default='transformer', choices=['end_to_end', 'transformer'], help='Specify loss terms for end_to_end approach')
+    parser.add_argument('--loss_term', type=str, default='transformer', choices=['cnn', 'end_to_end', 'transformer'], help='Specify loss terms for end_to_end approach')
     parser.add_argument('--max_length', type=int, default=400, help='Maximum sequence length')
     parser.add_argument('--mix_images', type=boolean_string, default=False, choices=['False'], help='Mix tokens from different images in the batch')
     parser.add_argument('--random_tokens', type=boolean_string, default=False, choices=['False'], help='random/oredered tokens')

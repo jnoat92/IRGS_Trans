@@ -2,9 +2,9 @@
 #SBATCH --nodes 1
 #SBATCH --gpus-per-node=1 # request a GPU
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=40 # change this parameter to 2,4,6,... and increase "--num_workers" accordingly to see the effect on performance
-#SBATCH --mem=128G
-#SBATCH --time=00:15:00
+#SBATCH --cpus-per-task=28 # change this parameter to 2,4,6,... and increase "--num_workers" accordingly to see the effect on performance
+#SBATCH --mem=127510M
+#SBATCH --time=00:20:00
 #SBATCH --output=../output_logs/%j.out
 #SBATCH --account=def-l44xu-ab
 #SBATCH --mail-user=jnoat92@gmail.com
@@ -13,13 +13,13 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-type=REQUEUE
 
-# salloc --time=3:00:0 --account=def-dclausi --nodes 1 --tasks-per-node=1 --gpus-per-node=1 --cpus-per-task=8 --mem=32G
+# salloc --time=3:00:0 --account=def-dclausi --nodes 1 --tasks-per-node=1 --gpus-per-node=1 --cpus-per-task=28 --mem=127518M
 
 echo "No. of task per node: $SLURM_NTASKS"
 
 module purge
 module load python/3.9.6
-module load cuda        # in case of using numba library
+module load cuda/11.7        # in case of using numba library
 
 #module load scipy-stack
 echo "Loading module done"
