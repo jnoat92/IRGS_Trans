@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --nodes 1
-#SBATCH --gpus-per-node=4 # request a GPU
+#SBATCH --gpus-per-node=t4:4 # request a GPU
 #SBATCH --tasks-per-node=4
 #SBATCH --cpus-per-task=8 # change this parameter to 2,4,6,... and increase "--num_workers" accordingly to see the effect on performance
-#SBATCH --mem=64G
+#SBATCH --mem=183100M
 #SBATCH --time=45:00:00
 #SBATCH --output=../output_logs/%j.out
-#SBATCH --account=def-l44xu-ab
+#SBATCH --account=def-dclausi
 #SBATCH --mail-user=jnoat92@gmail.com
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
