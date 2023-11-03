@@ -6,7 +6,7 @@
 #SBATCH --mem=127510M
 #SBATCH --time=00:20:00
 #SBATCH --output=../output_logs/%j.out
-#SBATCH --account=def-l44xu-ab
+#SBATCH --account=def-dclausi
 #SBATCH --mail-user=jnoat92@gmail.com
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
