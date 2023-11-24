@@ -81,7 +81,7 @@ def Arguments_test():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_gpu', type=boolean_string, default=True, help='bool flag')
     parser.add_argument('--batch_size', type=int, default=4, help='training batch size')
-    parser.add_argument('--num_workers', default=0, type=int, help='')    
+    parser.add_argument('--num_workers', default=1, type=int, help='')    
 
 
     # ================ IRGS-TRANS CONFIG ==========
