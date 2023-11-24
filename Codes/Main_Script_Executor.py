@@ -9,7 +9,9 @@ scenes = ['20100418', '20100426', '20100510', '20100524', '20100605', '20100623'
 
 new_test_scenes = ["20100704", "20101014", "20101017", "20101025", "20110530", 
                    "20110613", "20110627", "20110709", "20110710", 
-                   "20110720", "20110725", "20111006", "20111013", "20111029"]
+                   "20110720", "20110725", "20111029"]
+
+# The scenes "20111006", "20111013" do not have labels, so they were excluded
 
 # 35 scenes 
 scenes = scenes + new_test_scenes
@@ -45,14 +47,14 @@ Schedule = []
 Schedule = ["wandb login e478171c2941cc8ddc5a71663e36f613042dfc6e"]
 Schedule.append("wandb offline")
 
-# # # ------------ PREPARE DATA
-# # scenes = scenes[:(len(scenes)//2)]
+# # ------------ PREPARE DATA
+# scenes = scenes[:(len(scenes)//2)]
 # scenes = scenes[(len(scenes)//2):]
-# os.system("python prepare_data.py   --save_samples True \
-#                                     --train_path " + '_'.join(scenes) + " \
-#                                     --test_path "  + '_'.join(scenes)
-#           )
-# exit()
+os.system("python prepare_data.py   --save_samples True \
+                                    --train_path " + '_'.join(scenes) + " \
+                                    --test_path "  + '_'.join(scenes)
+          )
+exit()
 
 
 # IRGS Exp

@@ -47,13 +47,13 @@ def Arguments_train():
                                                                           If False, the samples are extracted directly from the scene (faster)')
     parser.add_argument('--Datasets_dir', type=str, default='../../Dataset/', help='datasets path')
     parser.add_argument('--Dataset_name', type=str, default='21-scenes-less_resolution', help='dataset name')
-    parser.add_argument('--train_path', type=str, default='20100418_20100426', help='list of scenes separates by "_"')
-    parser.add_argument('--test_path', type=str, default='20110725', help='list of scenes separates by "_"')
+    parser.add_argument('--train_path', type=str, default='20100816_20100807', help='list of scenes separates by "_"')
+    parser.add_argument('--test_path', type=str, default='20100721', help='list of scenes separates by "_"')
     parser.add_argument('--in_chans', type=int, default=2, help='Number of bands')
     parser.add_argument('--n_classes', type=int, default=2, help='Number of classes')
 
     parser.add_argument('--patch_size', type=int, default=224, help='input image size (square)')
-    parser.add_argument('--patch_overlap', type=float, default=0.8, help='Overlap between patches')
+    parser.add_argument('--patch_overlap', type=float, default=0.0, help='Overlap between patches')
     
     parser.add_argument('--data_info_dir', type=str, default='../data_info/')
     parser.add_argument('--ckpt_path', type=str, default='../checkpoints/')

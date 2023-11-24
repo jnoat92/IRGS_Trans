@@ -22,7 +22,7 @@ from tqdm import tqdm
 import shutil
 import multiprocessing
 from functools import partial
-from utils.utils import plot_hist, Parallel
+from utils.utils import plot_hist, Parallel, aux_obj
 from utils.maxRectangle import maxRectangle
 import pandas as pd
 from matplotlib import cm
@@ -164,13 +164,20 @@ def Split_Image(rows=5989, cols=2985, no_tiles_h=5, no_tiles_w=5, val_tiles=None
 
     mask = np.zeros((rows, cols))       # 0 Training Tiles
                                         # 1 Validation Tiles
+    
     for i in val_tiles:
         t = tiles[i]
         finx = rows if (rows-(t[0] + xsz) < xsz) else (t[0] + xsz)
         finy = cols if (cols-(t[1] + ysz) < ysz) else (t[1] + ysz)
         mask[t[0]:finx, t[1]:finy] = 1
     
-    return mask
+    new_tiles = []
+    for t in tiles:
+        finx = rows if (rows-(t[0] + xsz) < xsz) else (t[0] + xsz)
+        finy = cols if (cols-(t[1] + ysz) < ysz) else (t[1] + ysz)
+        new_tiles.append([t[0], finx, t[1], finy])
+        
+    return mask, new_tiles
 
 def Split_in_Patches(patch_size, mask, lbl, percent=0, ref_r=0, ref_c=0, padding=True):
 
@@ -307,6 +314,42 @@ def Split_in_Patches_no_padding(patch_size, lbl, tile=None, percent=0, ref_r=0, 
     return patches
 
 
+# ============   SET SPLIT -- NEWEST - MORE EFFICIENT   ============
+class Slide_patches_index(data.Dataset):
+    def __init__(self, h_img, w_img, patch_size, overlap_percent):
+        super(Slide_patches_index, self).__init__()
+
+        self.h_crop = patch_size if patch_size < h_img else h_img
+        self.w_crop = patch_size if patch_size < w_img else w_img
+
+        self.h_stride = self.h_crop - round(self.h_crop * overlap_percent) if self.h_crop < h_img else h_img
+        self.w_stride = self.w_crop - round(self.w_crop * overlap_percent) if self.w_crop < w_img else w_img
+
+        self.h_grids = max(h_img - self.h_crop + self.h_stride - 1, 0) // self.h_stride + 1
+        self.w_grids = max(w_img - self.w_crop + self.w_stride - 1, 0) // self.w_stride + 1
+
+        self.patches_list = []
+        
+        for h_idx in range(self.h_grids):
+            for w_idx in range(self.w_grids):
+                y1 = h_idx * self.h_stride
+                x1 = w_idx * self.w_stride
+                
+                y2 = min(y1 + self.h_crop, h_img)
+                x2 = min(x1 + self.w_crop, w_img)
+                
+                y1 = max(y2 - self.h_crop, 0)
+                x1 = max(x2 - self.w_crop, 0)
+
+                self.patches_list.append((y1, y2, x1, x2))
+
+    def __getitem__(self, index):
+        return self.patches_list[index]
+    
+    def __len__(self):
+        return len(self.patches_list)
+
+
 # ============    DATASETS   ============
 def Load_simulated_CPdata_Saeid(image_root, gt_root):
 
@@ -403,9 +446,10 @@ class RadarSAT2_Dataset():
             # Some tiles are chossen for training and others for validation
             rows, cols = self.gts.shape
             no_tiles_h, no_tiles_w = 5, 3
-            self.mask_train_val = Split_Image(rows=rows, cols=cols,
-                                              no_tiles_h=no_tiles_h, no_tiles_w=no_tiles_w, 
-                                              val_tiles=validation_tiles[name])
+            self.mask_train_val, self.tiles = Split_Image(rows=rows, cols=cols, 
+                                                          no_tiles_h=no_tiles_h, 
+                                                          no_tiles_w=no_tiles_w, 
+                                                          val_tiles=validation_tiles[name])
             
             self.filepath = "{}/{}/".format(self.data_info_dir, self.name)
             os.makedirs(self.filepath, exist_ok=True)
@@ -416,46 +460,36 @@ class RadarSAT2_Dataset():
             # joblib.dump(self.norm, self.filepath + '/norm_params.pkl')
             # self.image = self.norm.Normalize(self.image)
 
-    def define_sets(self, padding=True):
+    def define_sets(self):
         '''
         Extract patches from each set (these are the images that feed the neural network)
         '''
 
         # Extract patches coordinates
-        self.train_patches, self.val_patches, \
-            self.test_patches, self.pad_tuple = Split_in_Patches(self.patch_size, self.mask_train_val,
-                                                                 self.background, percent=self.patch_overlap,
-                                                                 padding=padding)
-        print("--------------")
-        print("Training Patches:   %d"%(len(self.train_patches)))
-        print("Validation Patches: %d"%(len(self.val_patches)))
-        print("Test Patches:       %d"%(len(self.test_patches)))
-        print("--------------")
-
-        # Padding
-        self.background = np.pad(self.background, self.pad_tuple, mode = 'symmetric')
-        self.gts = np.pad(self.gts, self.pad_tuple, mode = 'symmetric')
-        self.image = np.pad(self.image, self.pad_tuple+tuple([(0,0)]), mode = 'symmetric')
+        for y1, y2, x1, x2 in self.tiles:
+            if self.mask_train_val[y1: y2, x1: x2].all():
+                patches_idx = Slide_patches_index(y2-y1, x2-x1, self.patch_size, 0)
+                self.val_patches.extend(np.array(patches_idx.patches_list) + 
+                                        np.array([y1, y1, x1, x1]))
+            else:
+                patches_idx = Slide_patches_index(y2-y1, x2-x1, self.patch_size, self.patch_overlap)
+                self.train_patches.extend(np.array(patches_idx.patches_list) + 
+                                          np.array([y1, y1, x1, x1]))
+        
+        # print("--------------")
+        # print("Training Patches:   %d"%(len(self.train_patches)))
+        # print("Validation Patches: %d"%(len(self.val_patches)))
+        # print("--------------")
 
         # Efective regions
         mask = 0.5*np.ones_like(self.gts)
-        patches = self.train_patches
-        for i in range(len(patches)):
-            x = patches[i][0]
-            y = patches[i][1]
-            sz_x = patches[i][2]
-            sz_y = patches[i][3]
-            mask[x : x + sz_x, y : y + sz_y] = 0.0
-        patches = self.val_patches
-        for i in range(len(patches)):
-            x = patches[i][0]
-            y = patches[i][1]
-            sz_x = patches[i][2]
-            sz_y = patches[i][3]
-            mask[x : x + sz_x, y : y + sz_y] = 1.0
-        mask = mask[self.pad_tuple[0][0]: self.gts.shape[0]-self.pad_tuple[0][1],
-                    self.pad_tuple[1][0]: self.gts.shape[1]-self.pad_tuple[1][1]]
+        for y1, y2, x1, x2 in self.train_patches:
+            mask[y1: y2, x1: x2] = 0.0
+        for y1, y2, x1, x2 in self.val_patches:
+            mask[y1: y2, x1: x2] = 1.0
+
         Image.fromarray(np.uint8(mask*255)).save(self.filepath + "/mask_tr_0_vl_1_patches.png")
+
 
     def define_sets_irgs_trans(self):
         '''
@@ -524,14 +558,16 @@ class RadarSAT2_Dataset():
                 print('FileExistsError exception handled...')
             
             data_dict = {}
-            for i in tqdm(range(len(patches))):
-                x = patches[i][0]
-                y = patches[i][1]
-                sz_x = patches[i][2]
-                sz_y = patches[i][3]
-                im = self.image     [x : x + sz_x, y : y + sz_y]
-                gt = self.gts       [x : x + sz_x, y : y + sz_y]
-                bc = self.background[x : x + sz_x, y : y + sz_y]
+            only_bck_patches = 0
+            for i in tqdm(range(len(patches)), ncols=50):
+                y1, y2, x1, x2 = patches[i]
+
+                bc = self.background[y1: y2, x1: x2]
+                if np.sum(bc == 0) >= 0.75 * ((y2-y1) * (x2-x1)):
+                    only_bck_patches += 1
+                    continue                                        # Do not include only-background patches
+                im = self.image     [y1: y2, x1: x2]
+                gt = self.gts       [y1: y2, x1: x2]
 
                 data_dict["img"] = im
                 data_dict["lbl"] = gt
@@ -542,12 +578,15 @@ class RadarSAT2_Dataset():
                     print('FileNotFoundError exception handled...')
                     continue
 
-                # just to check im-gt-bc alignment
-                # Image.fromarray(np.uint8((im+self.norm.min_val)*255/(self.norm.max_val-self.norm.min_val))[:,:,:3])\
-                #                                    .save(dir_ + '/im.tif')
-                # Image.fromarray(np.uint8(gt*255/4)).save(dir_ + '/gt.tif')
-                # Image.fromarray(np.uint8(bc*255  )).save(dir_ + '/bc.tif')
+                # # just to check im-gt-bc alignment
+                # s_im = np.uint8(255*(im+self.norm.min_val)/(self.norm.max_val-self.norm.min_val))
+                # Image.fromarray(s_im[:,:,0]).save(dir_ + '/{:05d}_im_hh.png'.format(i))
+                # Image.fromarray(s_im[:,:,1]).save(dir_ + '/{:05d}_im_hv.png'.format(i))
+                # Image.fromarray(np.uint8(gt*255/4)).save(dir_ + '/{:05d}_gt.png'.format(i))
+                # Image.fromarray(np.uint8(bc*255  )).save(dir_ + '/{:05d}_bc.png'.format(i))
+            print('Background patches: %d' %(only_bck_patches))
 
+            
         save_routine(os.path.join(output_dir, 'Tr'), self.train_patches)
         save_routine(os.path.join(output_dir, 'Vl'), self.val_patches)
         save_routine(os.path.join(output_dir, 'Ts'), self.test_patches)
@@ -751,22 +790,27 @@ def Data_proc(args, set_='train', sliding_window=True, norm_params=None, aug=Tru
             scene_data_dir = os.path.join('/home/' + os.getenv('LOGNAME') + '/scratch/', os.getenv('LOGNAME'), scene_data_dir[3:])
         sets_folders.append(scene_data_dir)
 
-        data =  RadarSAT2_Dataset(args, validation_tiles, name = i, set_=set_)
-        if set_ == 'train' and sliding_window: data.define_sets(padding=padding)
-        else: data.test_patches = Split_in_Patches_no_padding(args.patch_size, data.background)
-
-        if norm_params is not None:
-            data.image = norm_params.Normalize(data.image)
-
         # SAVE PATCHES
         if args.save_samples:
+            data =  RadarSAT2_Dataset(args, validation_tiles, name = i, set_=set_)
+            if set_ == 'train' and sliding_window: data.define_sets()
+            else:
+                data.test_patches = Slide_patches_index(data.image.shape[0], data.image.shape[1], 
+                                                        args.patch_size, 0).patches_list
+            
+            if norm_params is not None:
+                data.image = norm_params.Normalize(data.image)
+
             data.save_patches(output_dir=scene_data_dir)
     
-    Train_samples = Load_patches(sets_folders, stage="train", data_augmentation=aug)
-    Val_samples   = Load_patches(sets_folders, stage="validation", data_augmentation=False)
-    Test_samples  = Load_patches(sets_folders, stage="test", data_augmentation=False)
+    dataset = aux_obj()
+    if set_ == 'train':
+        dataset.train = Load_patches(sets_folders, stage="train", data_augmentation=aug)
+        dataset.val   = Load_patches(sets_folders, stage="validation", data_augmentation=False)
+    else:
+        dataset.test  = Load_patches(sets_folders, stage="test", data_augmentation=False)
 
-    return Train_samples, Val_samples, Test_samples
+    return dataset.train, dataset.val, dataset.test
     
 
 # ============  DATA LOADER TOKENS  ============

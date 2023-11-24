@@ -24,6 +24,8 @@ if __name__ == '__main__':
     ic(len(dataset.val))
     ic(len(dataset.test))
 
+    exit()
+
     # =========== Image segmentation using IRGS
     norm_params = Calculate_norm_params(args)
     start_time = time.time()

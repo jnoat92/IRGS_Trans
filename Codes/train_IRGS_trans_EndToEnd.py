@@ -443,7 +443,8 @@ def main(config=None):
 
     ckpt_CNN = os.path.join(ckpt_CNN, run_name)
     ckpt_irgs_trans = os.path.join(ckpt_irgs_trans, run_name)
-    os.makedirs(ckpt_irgs_trans, exist_ok=True)
+    if ckpt_irgs_trans != '': 
+        os.makedirs(ckpt_irgs_trans, exist_ok=True)
     os.makedirs(ckpt_CNN, exist_ok=True)
         
     # ================ TRANSFORMER
