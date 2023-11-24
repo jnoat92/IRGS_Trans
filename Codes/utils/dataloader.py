@@ -599,7 +599,8 @@ transform = A.Compose(
                             A.ShiftScaleRotate(shift_limit=0.15, scale_limit=0.15, rotate_limit=25, p=0.5),
                             A.HorizontalFlip(),
                             A.VerticalFlip()
-                        ]
+                        ],
+                        p=0.5
                     )
 
 class Load_patches(data.Dataset):
@@ -1023,9 +1024,10 @@ def Extract_segments(samples, norm_params, args, use_landmask=True):
                             args.token_option, norm_params, use_landmask, next(iterable))
 
 class Load_patches_segments(data.Dataset):
-    def __init__(self, file_paths):
+    def __init__(self, file_paths, aug=False):
         super(Load_patches_segments, self).__init__()
         self.file_paths = file_paths
+        self.data_augmentation = aug
 
     def __getitem__(self, index):
         
@@ -1037,6 +1039,27 @@ class Load_patches_segments(data.Dataset):
         seg = data["seg"]
         n_t = data["n_t"]
         bound = data["bound"]
+
+        img = (img+img.min((0,1)))/(img.max((0,1))-img.min((0,1)))
+        Image.fromarray(np.uint8(255*img)[:,:,0]).save('hh.png')
+        Image.fromarray(np.uint8(255*img)[:,:,1]).save('hh.png')
+        Image.fromarray(np.uint8(lbl*255/lbl.max())).save('gts.png')
+        Image.fromarray(np.uint8(bck*255)).save('bckg.png')
+        seg[seg==np.inf] = -1
+        Image.fromarray(np.uint8((seg+1)*255/(n_t+1))).save('segments.png')
+        Image.fromarray(255*np.uint8(bound==-1)).save('boundaries.png')
+        ic(n_t)
+        exit()
+
+        # Random data augmentation
+        if self.data_augmentation:
+            transformed = transform(image=img, masks=[lbl, bck, seg, bound])
+            img = transformed['image']
+            lbl = transformed['masks'][0]
+            bck = transformed['masks'][1]
+            seg = transformed['masks'][2]
+            n_t = len(torch.unique(seg))
+            bound = transformed['masks'][3]
 
         return img, lbl, bck, seg, n_t, bound
 

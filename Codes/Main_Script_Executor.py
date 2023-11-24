@@ -48,13 +48,13 @@ Schedule = ["wandb login e478171c2941cc8ddc5a71663e36f613042dfc6e"]
 Schedule.append("wandb offline")
 
 # # ------------ PREPARE DATA
-# scenes = scenes[:(len(scenes)//2)]
-# scenes = scenes[(len(scenes)//2):]
-os.system("python prepare_data.py   --save_samples True \
-                                    --train_path " + '_'.join(scenes) + " \
-                                    --test_path "  + '_'.join(scenes)
-          )
-exit()
+# # scenes = scenes[:(len(scenes)//2)]
+# # scenes = scenes[(len(scenes)//2):]
+# os.system("python prepare_data.py   --save_samples True \
+#                                     --train_path " + '_'.join(scenes) + " \
+#                                     --test_path "  + '_'.join(scenes)
+#           )
+# exit()
 
 
 # IRGS Exp
