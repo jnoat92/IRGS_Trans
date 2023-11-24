@@ -539,7 +539,8 @@ def main(config=None):
 #%% ============== SAVE NORM PARAMS =============== #
     norm_params = Calculate_norm_params(args)
     joblib.dump(norm_params, ckpt_CNN + '/norm_params.pkl')
-    joblib.dump(norm_params, ckpt_irgs_trans + '/norm_params.pkl')
+    if ckpt_irgs_trans != '': 
+        joblib.dump(norm_params, ckpt_irgs_trans + '/norm_params.pkl')
 
 #%% ============== DATALOADERS =============== #
     if ngpus_per_node > 1:
