@@ -594,7 +594,7 @@ class RadarSAT2_Dataset():
 
 
 # ============  DATA LOADER PATCHES  ============
-transform = A.Compose(
+transform = A.ReplayCompose(
                         [
                             A.ShiftScaleRotate(shift_limit=0.15, scale_limit=0.15, rotate_limit=25, p=0.5),
                             A.HorizontalFlip(),
@@ -1040,26 +1040,34 @@ class Load_patches_segments(data.Dataset):
         n_t = data["n_t"]
         bound = data["bound"]
 
-        img = (img+img.min((0,1)))/(img.max((0,1))-img.min((0,1)))
-        Image.fromarray(np.uint8(255*img)[:,:,0]).save('hh.png')
-        Image.fromarray(np.uint8(255*img)[:,:,1]).save('hh.png')
-        Image.fromarray(np.uint8(lbl*255/lbl.max())).save('gts.png')
-        Image.fromarray(np.uint8(bck*255)).save('bckg.png')
-        seg[seg==np.inf] = -1
-        Image.fromarray(np.uint8((seg+1)*255/(n_t+1))).save('segments.png')
-        Image.fromarray(255*np.uint8(bound==-1)).save('boundaries.png')
-        ic(n_t)
-        exit()
-
         # Random data augmentation
         if self.data_augmentation:
             transformed = transform(image=img, masks=[lbl, bck, seg, bound])
-            img = transformed['image']
-            lbl = transformed['masks'][0]
-            bck = transformed['masks'][1]
-            seg = transformed['masks'][2]
-            n_t = len(torch.unique(seg))
-            bound = transformed['masks'][3]
+            
+            if transformed['replay']['applied']:
+                img = transformed['image']
+                lbl = transformed['masks'][0]
+                bck = transformed['masks'][1]
+                seg = transformed['masks'][2]
+                bound = transformed['masks'][3]
+
+                if transformed['replay']['transforms'][0]['applied']:       # 'ShiftScaleRotate'
+                    # map seg from 0 to number of segments and update n_t
+                    seg = np.where(seg == np.inf, seg, np.searchsorted(np.unique(seg[seg != np.inf]), seg))
+                    n_t = len(np.unique(seg))
+                    if (seg==np.inf).any(): n_t -= 1
+
+
+        # img_ = (img+img.min((0,1)))/(img.max((0,1))-img.min((0,1)))
+        # Image.fromarray(np.uint8(255*img_)[:,:,0]).save('hht.png')
+        # Image.fromarray(np.uint8(255*img_)[:,:,1]).save('hvt.png')
+        # Image.fromarray(np.uint8(lbl*255/lbl.max())).save('gtst.png')
+        # Image.fromarray(np.uint8(bck*255)).save('bckgt.png')
+        # seg[seg==np.inf] = -1
+        # Image.fromarray(np.uint8((seg+1)*255/(seg.max()+1))).save('segmentst.png')
+        # Image.fromarray(255*np.uint8(bound==-1)).save('boundariest.png')
+        # ic(n_t)
+        # exit()
 
         return img, lbl, bck, seg, n_t, bound
 

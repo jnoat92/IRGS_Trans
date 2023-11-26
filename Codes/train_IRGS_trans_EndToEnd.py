@@ -532,7 +532,7 @@ def main(config=None):
     print("Effective test  set size: {:0d}".format(len(dataset.test)))
 
     # =========== Datasets matching images + segments
-    dataset.train = Load_patches_segments(dataset.train.file_paths)
+    dataset.train = Load_patches_segments(dataset.train.file_paths, aug=True)
     dataset.val   = Load_patches_segments(dataset.val.file_paths)
     dataset.test  = Load_patches_segments(dataset.test.file_paths)
 

@@ -16,7 +16,7 @@ def Arguments_train():
     parser.add_argument('--init_method', default='tcp://127.0.0.1:3456', type=str, help='')
     parser.add_argument('--dist_backend', default='gloo', type=str, help='')
     parser.add_argument('--world_size', default=1, type=int, help='')
-    parser.add_argument('--num_workers', default=0, type=int, help='')    
+    parser.add_argument('--num_workers', default=1, type=int, help='')    
     parser.add_argument('--nodes', default=1, type=int, help='')    
     # ===================================================
 
@@ -47,7 +47,7 @@ def Arguments_train():
                                                                           If False, the samples are extracted directly from the scene (faster)')
     parser.add_argument('--Datasets_dir', type=str, default='../../Dataset/', help='datasets path')
     parser.add_argument('--Dataset_name', type=str, default='21-scenes-less_resolution', help='dataset name')
-    parser.add_argument('--train_path', type=str, default='20100816_20100807', help='list of scenes separates by "_"')
+    parser.add_argument('--train_path', type=str, default='20100816', help='list of scenes separates by "_"')
     parser.add_argument('--test_path', type=str, default='20100721', help='list of scenes separates by "_"')
     parser.add_argument('--in_chans', type=int, default=2, help='Number of bands')
     parser.add_argument('--n_classes', type=int, default=2, help='Number of classes')
@@ -81,7 +81,7 @@ def Arguments_test():
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_gpu', type=boolean_string, default=True, help='bool flag')
     parser.add_argument('--batch_size', type=int, default=4, help='training batch size')
-    parser.add_argument('--num_workers', default=1, type=int, help='')    
+    parser.add_argument('--num_workers', default=0, type=int, help='')    
 
 
     # ================ IRGS-TRANS CONFIG ==========

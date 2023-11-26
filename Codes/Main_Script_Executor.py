@@ -31,7 +31,7 @@ def Arguments():
     parser.add_argument('--init_method', default='tcp://127.0.0.1:3456', type=str, help='')
     parser.add_argument('--dist-backend', default='gloo', type=str, help='')
     parser.add_argument('--world_size', default=1, type=int, help='')
-    parser.add_argument('--num_workers', default=0, type=int, help='')    
+    parser.add_argument('--num_workers', default=1, type=int, help='')    
     parser.add_argument('--nodes', default=1, type=int, help='')    
     args = parser.parse_args()
     return args
@@ -47,9 +47,8 @@ Schedule = []
 Schedule = ["wandb login e478171c2941cc8ddc5a71663e36f613042dfc6e"]
 Schedule.append("wandb offline")
 
-# # ------------ PREPARE DATA
-# # scenes = scenes[:(len(scenes)//2)]
-# # scenes = scenes[(len(scenes)//2):]
+# ------------ PREPARE DATA
+# # scenes = ['20100816', '20100721']
 # os.system("python prepare_data.py   --save_samples True \
 #                                     --train_path " + '_'.join(scenes) + " \
 #                                     --test_path "  + '_'.join(scenes)
