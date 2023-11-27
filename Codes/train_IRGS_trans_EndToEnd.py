@@ -68,8 +68,7 @@ def train(model, model_no_ddp, data_loader, epoch, ckpt_dir, args,
 
     # Data
     data_loader_size = len(data_loader)
-    sample_per_epochs = 2000
-    n_batches = min(sample_per_epochs//data_loader.batch_size, data_loader_size)
+    n_batches = min(args.samples_per_epoch//data_loader.batch_size, data_loader_size)
     data_iterator = iter(data_loader)
 
     # Batch loop
@@ -190,9 +189,7 @@ def test(model, data_loader, args, stage='end_to_end', loss_term=None, device='c
     model.eval()
 
     # Data
-    data_loader_size = len(data_loader)
-    sample_per_epochs = 2000
-    n_batches = min(sample_per_epochs//data_loader.batch_size, data_loader_size)
+    n_batches = len(data_loader)
     data_iterator = iter(data_loader)
 
     # Batch loop
@@ -545,15 +542,16 @@ def main(config=None):
 #%% ============== DATALOADERS =============== #
     if ngpus_per_node > 1:
         sampler.train = torch.utils.data.distributed.DistributedSampler(dataset.train, shuffle=True)
-        sampler.val   = torch.utils.data.distributed.DistributedSampler(dataset.val,   shuffle=True)
+        sampler.val   = torch.utils.data.distributed.DistributedSampler(dataset.val,   shuffle=False)
         sampler.test  = torch.utils.data.distributed.DistributedSampler(dataset.test,  shuffle=False)
     
     loader.train = data.DataLoader(dataset=dataset.train, batch_size=args.batch_size, shuffle=(sampler.train is None), 
                                    num_workers=args.num_workers-1, sampler=sampler.train)
-    loader.val = data.DataLoader(dataset=dataset.val, batch_size=args.batch_size, shuffle=(sampler.val is None), 
+    loader.val = data.DataLoader(dataset=dataset.val, batch_size=args.batch_size, shuffle=False, 
                                    num_workers=args.num_workers-1, sampler=sampler.val)
     loader.test = data.DataLoader(dataset=dataset.test, batch_size=args.batch_size, shuffle=False, 
                                    num_workers=args.num_workers-1, sampler=sampler.test)
+
 
 #%% ============== TRAINING =============== #
     if args.mode == 'end_to_end':

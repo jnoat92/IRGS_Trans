@@ -53,7 +53,7 @@ def Arguments_train():
     parser.add_argument('--n_classes', type=int, default=2, help='Number of classes')
 
     parser.add_argument('--patch_size', type=int, default=224, help='input image size (square)')
-    parser.add_argument('--patch_overlap', type=float, default=0.0, help='Overlap between patches')
+    parser.add_argument('--patch_overlap', type=float, default=0.05, help='Overlap between patches')
     
     parser.add_argument('--data_info_dir', type=str, default='../data_info/')
     parser.add_argument('--ckpt_path', type=str, default='../checkpoints/')
@@ -62,6 +62,7 @@ def Arguments_train():
 
     parser.add_argument('--sweep', type=boolean_string, default=False, help='hyperparameter tunning mode')
     parser.add_argument('--epochs', type=int, default=50, help='epoch number')
+    parser.add_argument('--samples_per_epoch', type=int, default=1000, help='number of samples for training each epoch')
     parser.add_argument('--patience', type=int, default=15, help='number of epochs after no improvements (stop criteria)')
     parser.add_argument('--grad_norm', type=float, default=2.0, help='gradient clipping norm')
     parser.add_argument('--beta1', type=float, default=0.5, help='beta1 of adam optimizer')

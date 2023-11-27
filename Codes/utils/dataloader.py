@@ -596,7 +596,8 @@ class RadarSAT2_Dataset():
 # ============  DATA LOADER PATCHES  ============
 transform = A.ReplayCompose(
                         [
-                            A.ShiftScaleRotate(shift_limit=0.15, scale_limit=0.15, rotate_limit=25, p=0.5),
+                            # A.ShiftScaleRotate(shift_limit=0.15, scale_limit=0.15, rotate_limit=25, p=0.5),
+                            A.RandomRotate90(),
                             A.HorizontalFlip(),
                             A.VerticalFlip()
                         ],
@@ -994,15 +995,16 @@ def irgs_segments_parallel(irgs_classes, irgs_iter, token_option, norm_params, u
         data_dict["bound"] = boundaries
         try:
             joblib.dump(data_dict, file)
-            # # just to check im-gt-bc-seg-boundaries alignment
-            # Image.fromarray(np.uint8(norm_params.Denormalize(image))[:,:,0]).save(os.path.split(file)[0] + '/hh.png')
-            # Image.fromarray(np.uint8(norm_params.Denormalize(image)[:,:,1])).save(os.path.split(file)[0] + '/hv.png')
-            # Image.fromarray(np.uint8(gts*255/gts.max())).save(os.path.split(file)[0] + '/gts.png')
-            # Image.fromarray(np.uint8(bckg*255)).save(os.path.split(file)[0] + '/bckg.png')
-            # segments[segments==np.inf] = -1
-            # Image.fromarray(np.uint8(segments*255/(n_tokens+1))).save(os.path.split(file)[0] + '/segments.png')
-            # Image.fromarray(255*np.uint8(boundaries==-1)).save(os.path.split(file)[0] + '/boundaries.png')
-            # exit()
+            # just to check im-gt-bc-seg-boundaries alignment
+            prefix = os.path.splitext(file)[0]
+            os.makedirs(prefix, exist_ok=True)
+            Image.fromarray(np.uint8(norm_params.Denormalize(image))[:,:,0]).save(prefix + '/hh.png')
+            Image.fromarray(np.uint8(norm_params.Denormalize(image)[:,:,1])).save(prefix + '/hv.png')
+            Image.fromarray(np.uint8(gts*255/gts.max())).save(prefix + '/gts.png')
+            Image.fromarray(np.uint8(bckg*255)).save(prefix + '/bckg.png')
+            segments[segments==np.inf] = -1
+            Image.fromarray(np.uint8(segments*255/(n_tokens+1))).save(prefix + '/segments.png')
+            Image.fromarray(255*np.uint8(boundaries==-1)).save(prefix + '/boundaries.png')
         except FileNotFoundError:
             print('FileNotFoundError exception handled...')
     
@@ -1050,13 +1052,6 @@ class Load_patches_segments(data.Dataset):
                 bck = transformed['masks'][1]
                 seg = transformed['masks'][2]
                 bound = transformed['masks'][3]
-
-                if transformed['replay']['transforms'][0]['applied']:       # 'ShiftScaleRotate'
-                    # map seg from 0 to number of segments and update n_t
-                    seg = np.where(seg == np.inf, seg, np.searchsorted(np.unique(seg[seg != np.inf]), seg))
-                    n_t = len(np.unique(seg))
-                    if (seg==np.inf).any(): n_t -= 1
-
 
         # img_ = (img+img.min((0,1)))/(img.max((0,1))-img.min((0,1)))
         # Image.fromarray(np.uint8(255*img_)[:,:,0]).save('hht.png')

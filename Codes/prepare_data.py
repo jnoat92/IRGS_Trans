@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     dataset.train.file_paths.extend(dataset.val.file_paths)
     dataset.train.file_paths.extend(dataset.test.file_paths)
-    ic(len(dataset.train))
+    print('Total patches: %d'%(len(dataset.train)))
     Extract_segments(dataset.train, norm_params, args)
     # Extract_segments(dataset.val, norm_params, args)
     # Extract_segments(dataset.test, norm_params, args)
