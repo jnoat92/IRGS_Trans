@@ -1,19 +1,19 @@
 #!/bin/bash
 
-exp=1   # multi-stage-cnn                 time --> 5.5 min per epoch (04:30:00 for 50 epochs)     trained & tested!  beluga
+exp=1   # multi-stage-cnn                 time --> 5.5 min per epoch (02:55:00 for 50 epochs)     training!  graham
 
-# exp=2   # End-to-end loss-transformer     time --> 0.80hrs per epoch (40:00:00 for 50 epochs)     trained & tested!  beluga
+# exp=2   # End-to-end loss-transformer     time --> 1.236hrs per epoch (65:00:00 for 50 epochs)     
 
-# exp=3   # multi-stage-transformer         time --> 0.85hrs per epoch (45:00:00 for 50 epochs)     trained & tested!  beluga
+# exp=3   # multi-stage-transformer         time --> 1.236hrs per epoch (65:00:00 for 50 epochs)     
 
-# exp=4   # multi-stage-loss-end-to-end     time --> 0.85hrs per epoch (45:00:00 for 50 epochs)     trained & tested!  graham
+# exp=4   # multi-stage-loss-end-to-end     time --> 1.236hrs per epoch (65:00:00 for 50 epochs)     
 
-# exp=5   # End-to-end loss-end-to-end      time --> 0.85hrs per epoch (45:00:00 for 50 epochs)      trained & tested! beluga
+# exp=5   # End-to-end loss-end-to-end      time --> 1.236hrs per epoch (65:00:00 for 50 epochs)     
 
 
 
 # train
-for i in {0..0}
+for i in {1..32}
 do
     echo "executing train in model $i"
     sbatch execute_train.sh $i 1 $exp
