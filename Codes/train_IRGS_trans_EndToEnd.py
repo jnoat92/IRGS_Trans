@@ -503,7 +503,7 @@ def main(config=None):
 
     elif cnn_trained:
         if args.mode == 'multi_stage':
-            assert args.stage == 'cnn', 'cnn is not completelly trained ---> run stage=cnn'
+            assert args.stage == 'cnn' or (args.stage == 'end_to_end' and epoch > -1), 'cnn is not completelly trained ---> run stage=cnn'
             with open(ckpt_CNN + "/Log.txt", "a") as f: 
                 f.write("===== {} Checkpoint loaded =====\n".format(model_no_ddp.cnn.net_name))
         
