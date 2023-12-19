@@ -363,6 +363,7 @@ def Train_loop(loader, sampler, model, model_no_ddp, best_loss,
 def main(config=None):
 
     args = Arguments_train()
+    args.num_workers = args.num_workers // 2 + 1
 
 #%% ============== HYPER-PAREMETER TUNNING =============== #
     run_name = ''
@@ -546,11 +547,11 @@ def main(config=None):
         sampler.test  = torch.utils.data.distributed.DistributedSampler(dataset.test,  shuffle=False)
     
     loader.train = data.DataLoader(dataset=dataset.train, batch_size=args.batch_size, shuffle=(sampler.train is None), 
-                                   num_workers=args.num_workers-1, sampler=sampler.train)
+                                   num_workers=args.num_workers, sampler=sampler.train)
     loader.val = data.DataLoader(dataset=dataset.val, batch_size=args.batch_size, shuffle=False, 
-                                   num_workers=args.num_workers-1, sampler=sampler.val)
+                                   num_workers=args.num_workers, sampler=sampler.val)
     loader.test = data.DataLoader(dataset=dataset.test, batch_size=args.batch_size, shuffle=False, 
-                                   num_workers=args.num_workers-1, sampler=sampler.test)
+                                   num_workers=args.num_workers, sampler=sampler.test)
 
 
 #%% ============== TRAINING =============== #

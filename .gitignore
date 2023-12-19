@@ -1,5 +1,5 @@
 checkpoints/
-checkpoints111/
+results_test_50epochs/
 job_submission_computecanada/output_logs/
 Codes/wandb/
 data_info/

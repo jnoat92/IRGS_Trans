@@ -61,7 +61,7 @@ def Arguments_train():
     # ===================================================
 
     parser.add_argument('--sweep', type=boolean_string, default=False, help='hyperparameter tunning mode')
-    parser.add_argument('--epochs', type=int, default=50, help='epoch number')
+    parser.add_argument('--epochs', type=int, default=100, help='epoch number')
     parser.add_argument('--samples_per_epoch', type=int, default=1000, help='number of samples for training each epoch')
     parser.add_argument('--patience', type=int, default=15, help='number of epochs after no improvements (stop criteria)')
     parser.add_argument('--grad_norm', type=float, default=2.0, help='gradient clipping norm')
