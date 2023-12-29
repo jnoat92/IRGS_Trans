@@ -29,10 +29,11 @@ def Metrics(y_true, y_pred, method, output_folder, time_=None):
     if output_folder is None: return acc, IoU
 
     # Save results
+    classes = np.unique(np.concatenate((y_pred, y_true)))
     print_line = [
                     [method],
                     [method, 'OA       ', acc],
-                    [method, 'Classes  '] + [str(k)+4*" " for k in range(len(pre))] + ['Average'],
+                    [method, 'Classes  '] + [str(k)+4*" " for k in classes] + ['Average'],
                     [method, 'Precision'] + list(pre) + [pre.mean()],
                     [method, 'Recall   '] + list(rec) + [rec.mean()],
                     [method, 'F-Score  '] + list(f1s) + [f1s.mean()],
