@@ -39,15 +39,15 @@ def M_Voting(test_data, token_option, n_tokens, segments, cnn_pred,
         # ------ CNN
         # m_v_per_CC_cnn_ = MV_per_CC().do(segments, n_tokens, cnn_pred, background=-1)            # per superpixels
         m_v_per_CC_cnn = MV_per_CC().CPU_parallel(segments, n_tokens, cnn_pred.astype('int64'), background=-1)            # per superpixels
-        colored_m_v_per_CC_cnn = test_data.class_colors[m_v_per_CC_cnn.astype(int)+1]
-        colored_m_v_per_CC_cnn[landmask_idx] = 0
+        colored_m_v_per_CC_cnn = test_data.class_colors[m_v_per_CC_cnn.astype(int)]
+        colored_m_v_per_CC_cnn[landmask_idx] = 255
         Image.fromarray(colored_m_v_per_CC_cnn).save(output_folder + '/CNN_colored_m_v_per_CC.png')
 
         # ------ Ground truth        
         # m_v_per_CC_ = MV_per_CC().do(segments, n_tokens, test_data.gts, background=-1)           # per superpixels
         m_v_per_CC = MV_per_CC().CPU_parallel(segments, n_tokens, test_data.gts.astype('int64'), background=-1)           # per superpixels
-        colored_m_v_per_CC = test_data.class_colors[m_v_per_CC.astype(int)+1]
-        colored_m_v_per_CC[landmask_idx] = 0
+        colored_m_v_per_CC = test_data.class_colors[m_v_per_CC.astype(int)]
+        colored_m_v_per_CC[landmask_idx] = 255
         Image.fromarray(colored_m_v_per_CC).save(output_folder + '/GT_colored_m_v_per_CC.png')
 
         Metrics( test_data.gts[landmask_idx==0], 
@@ -57,14 +57,14 @@ def M_Voting(test_data, token_option, n_tokens, segments, cnn_pred,
     elif token_option == 'clusters':
         # ------ CNN
         m_v_per_Class_cnn = MV_per_Class(segments, cnn_pred)                 # cluster
-        colored_m_v_per_Class_cnn = test_data.class_colors[m_v_per_Class_cnn.astype(int)+1]
-        colored_m_v_per_Class_cnn[landmask_idx] = 0
+        colored_m_v_per_Class_cnn = test_data.class_colors[m_v_per_Class_cnn.astype(int)]
+        colored_m_v_per_Class_cnn[landmask_idx] = 255
         Image.fromarray(colored_m_v_per_Class_cnn).save(output_folder + '/CNN_colored_m_v_per_Class.png')
         
         # ------ Ground truth        
         m_v_per_Class = MV_per_Class(segments, id, test_data.gts)                # per cluster
-        colored_m_v_per_Class = test_data.class_colors[m_v_per_Class.astype(int)+1]
-        colored_m_v_per_Class[landmask_idx] = 0
+        colored_m_v_per_Class = test_data.class_colors[m_v_per_Class.astype(int)]
+        colored_m_v_per_Class[landmask_idx] = 255
         Image.fromarray(colored_m_v_per_Class).save(output_folder + '/GT_colored_m_v_per_Class.png')
 
         Metrics(    test_data.gts[landmask_idx==0], 
@@ -462,15 +462,16 @@ if __name__ == '__main__':
         image_enhanced = Enhance_image(test_data.image, test_data.background)
         Image.fromarray(image_enhanced[:, :, 0]).save(output_folder + "/HH.png")
         Image.fromarray(image_enhanced[:, :, 1]).save(output_folder + "/HV.png")
+
        
         # ------ SAVE GROUND TRUTH
-        colored_gts = test_data.class_colors[test_data.gts.astype(int)+1]
-        colored_gts[landmask_idx] = 0
+        colored_gts = test_data.class_colors[test_data.gts.astype(int)]
+        colored_gts[landmask_idx] = 255
         Image.fromarray(colored_gts).save(output_folder + '/colored_gts.png')
         
         # ------ SAVE PREDICTION
-        colored_pred_map = test_data.class_colors[pred_map+1]
-        colored_pred_map[landmask_idx] = 0
+        colored_pred_map = test_data.class_colors[pred_map]
+        colored_pred_map[landmask_idx] = 255
         Image.fromarray(colored_pred_map).save(output_folder + '/colored_predict_%s.png'%(args.stage))
         np.save(output_folder + '/probabilities_predict_%s.npy'%(args.stage), probs_map)
 
@@ -496,12 +497,12 @@ if __name__ == '__main__':
             irgs_colors_rgb = np.asarray([hex_to_rgb(i) for i in irgs_colors])
 
             colored_irgs_output = np.uint8(irgs_colors_rgb[segments.astype('int64')])
-            colored_irgs_output[landmask_idx] = 0
+            colored_irgs_output[landmask_idx] = 255
             Image.fromarray(colored_irgs_output).save(output_folder + "/colored_irgs_output.png")
             
             Image.fromarray(255*np.uint8((landmask_idx==0)*(boundaries==-1))).save(output_folder + "/irgs_boundaries.png")
             aux = np.uint8(image_enhanced.repeat(3, axis=2)); aux[boundaries==-1] = 2*[255, 165, 0]
-            aux[landmask_idx] = 0
+            aux[landmask_idx] = 255
             Image.fromarray(aux[:,:,0:3]).save(output_folder + "/HH_boundaries.png")
             Image.fromarray(aux[:,:,3: ]).save(output_folder + "/HV_boundaries.png")
 

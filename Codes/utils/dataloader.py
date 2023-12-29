@@ -22,11 +22,12 @@ from tqdm import tqdm
 import shutil
 import multiprocessing
 from functools import partial
-from utils.utils import plot_hist, Parallel, aux_obj
+from utils.utils import plot_hist, Parallel, aux_obj, hex_to_rgb
 from utils.maxRectangle import maxRectangle
 import pandas as pd
 from matplotlib import cm
 from skimage import measure
+from mycolorpy import colorlist as mcp
 
 
 # ============ NORMALIZATION ============
@@ -134,7 +135,7 @@ def Enhance_image(img, mask):
     min_ = img[mask!=0].min(0)
     max_ = img[mask!=0].max(0)
     img = np.uint8(255*((img - min_) / (max_ - min_)))
-    img[mask == 0] = 0
+    img[mask == 0] = 255
 
     return img
     
@@ -403,13 +404,13 @@ def Load_21Scenes(scene_dir):
     # # Image.fromarray(np.uint8(self.gts*255/10)).save(scene_dir + 'Max_labels/labels_corrected_boundaries.tif')
     
     background = np.asarray(Image.open(scene_dir + 'landmask.bmp')).astype(float) / 255
-    classes = ["Background", "Open water", "Young ice", "Multi-year ice", ]
-    class_colors = np.uint8(np.array([[0, 0, 0],           # Background
-                                        [255, 204, 239],     # Open water
-                                        [204, 0, 255],       # Young ice
-                                        [255, 0, 0]          # Multi-year ice
-                                        ]))
-    
+    classes = ["Open water", "Ice"]
+    class_colors = np.asarray([hex_to_rgb(i) for i in mcp.gen_color(cmap="jet", n=len(classes))]).astype('uint8')
+    # class_colors = np.uint8(np.array([[255, 255, 255],      # Background
+    #                                     [0,   0, 128],      # Open water
+    #                                     [128,   0,   0]     # ice
+    #                                     ]))
+
     return image, gts, background, classes, class_colors
 
 class RadarSAT2_Dataset():
