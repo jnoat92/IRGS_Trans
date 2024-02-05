@@ -92,7 +92,7 @@ if True:
 #     train_scene = '_'.join(sc[:20])
 
 # # # ------------ Experiments --------------------------------------------------------------- #
-    if args.train:
+    if args.train == 0:
         # TRAIN
         if   args.exp == 1:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
@@ -157,8 +157,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-            
-    else:
+    elif args.train == 1:
         # TEST
         if   args.exp == 1:
             Schedule.append("python test_IRGS_trans_EndToEnd.py \
@@ -253,6 +252,65 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
+    elif args.train == 2:
+        # TEST
+        # if   args.exp == 1:
+            Schedule.append("python buffer_metrics.py \
+                                                        --mode multi_stage \
+                                                        --loss_term cnn \
+                                                        --stage cnn \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+
+        # elif args.exp == 2:
+            Schedule.append("python buffer_metrics.py \
+                                                        --mode end_to_end \
+                                                        --loss_term transformer \
+                                                        --stage transformer \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+
+        # elif args.exp == 3:
+            Schedule.append("python buffer_metrics.py \
+                                                        --mode multi_stage \
+                                                        --loss_term transformer \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+        
+        # elif args.exp == 4:
+            Schedule.append("python buffer_metrics.py \
+                                                        --mode multi_stage \
+                                                        --loss_term end_to_end\
+                                                        --stage cnn \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+            Schedule.append("python buffer_metrics.py \
+                                                        --mode multi_stage \
+                                                        --loss_term end_to_end\
+                                                        --stage transformer \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+
+        # elif args.exp == 5:
+            Schedule.append("python buffer_metrics.py \
+                                                        --mode end_to_end \
+                                                        --loss_term end_to_end \
+                                                        --stage cnn \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+            Schedule.append("python buffer_metrics.py \
+                                                        --mode end_to_end \
+                                                        --loss_term end_to_end \
+                                                        --stage transformer \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
 
 
     # # Schedule.append("python major_voting.py   --scene " + test_scene)

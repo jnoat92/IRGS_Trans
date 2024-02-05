@@ -463,7 +463,7 @@ if __name__ == '__main__':
         Image.fromarray(image_enhanced[:, :, 0]).save(output_folder + "/HH.png")
         Image.fromarray(image_enhanced[:, :, 1]).save(output_folder + "/HV.png")
 
-       
+
         # ------ SAVE GROUND TRUTH
         colored_gts = test_data.class_colors[test_data.gts.astype(int)]
         colored_gts[landmask_idx] = 255
