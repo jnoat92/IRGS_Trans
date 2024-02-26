@@ -134,19 +134,6 @@ if True:
         elif args.exp == 4:
             Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
                                                         --num_workers " + str(args.num_workers) + " \
-                                                        --mode multi_stage \
-                                                        --stage end_to_end \
-                                                        --mix_images True \
-                                                        --random_tokens True \
-                                                        \
-                                                        --train_path " + train_scene + " \
-                                                        --test_path " + test_scene + " \
-                                                        --model_name " + "model_{}".format(str(model_id))
-                            )
-        
-        elif args.exp == 5:
-            Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
-                                                        --num_workers " + str(args.num_workers) + " \
                                                         --mode end_to_end \
                                                         --loss_term end_to_end \
                                                         --mix_images True \
@@ -154,6 +141,19 @@ if True:
                                                         --train_path " + train_scene + " \
                                                         --test_path " + test_scene + " \
                                                         \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+
+        elif args.exp == 5:
+            Schedule.append("python train_IRGS_trans_EndToEnd.py" + multi_gpu_config + "\
+                                                        --num_workers " + str(args.num_workers) + " \
+                                                        --mode multi_stage \
+                                                        --stage end_to_end \
+                                                        --mix_images True \
+                                                        --random_tokens True \
+                                                        \
+                                                        --train_path " + train_scene + " \
+                                                        --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
@@ -205,8 +205,8 @@ if True:
                                                         --num_workers " + str(args.num_workers) + " \
                                                         --use_gpu True \
                                                         \
-                                                        --mode multi_stage \
-                                                        --loss_term end_to_end\
+                                                        --mode end_to_end \
+                                                        --loss_term end_to_end \
                                                         --stage cnn \
                                                         --irgs_classes 15 \
                                                         \
@@ -217,8 +217,8 @@ if True:
                                                         --num_workers " + str(args.num_workers) + " \
                                                         --use_gpu True \
                                                         \
-                                                        --mode multi_stage \
-                                                        --loss_term end_to_end\
+                                                        --mode end_to_end \
+                                                        --loss_term end_to_end \
                                                         --stage transformer \
                                                         --irgs_classes 15 \
                                                         \
@@ -231,8 +231,8 @@ if True:
                                                         --num_workers " + str(args.num_workers) + " \
                                                         --use_gpu True \
                                                         \
-                                                        --mode end_to_end \
-                                                        --loss_term end_to_end \
+                                                        --mode multi_stage \
+                                                        --loss_term end_to_end\
                                                         --stage cnn \
                                                         --irgs_classes 15 \
                                                         \
@@ -243,8 +243,8 @@ if True:
                                                         --num_workers " + str(args.num_workers) + " \
                                                         --use_gpu True \
                                                         \
-                                                        --mode end_to_end \
-                                                        --loss_term end_to_end \
+                                                        --mode multi_stage \
+                                                        --loss_term end_to_end\
                                                         --stage transformer \
                                                         --irgs_classes 15 \
                                                         \
@@ -282,15 +282,15 @@ if True:
         
         # elif args.exp == 4:
             Schedule.append("python buffer_metrics.py \
-                                                        --mode multi_stage \
-                                                        --loss_term end_to_end\
+                                                        --mode end_to_end \
+                                                        --loss_term end_to_end \
                                                         --stage cnn \
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
             Schedule.append("python buffer_metrics.py \
-                                                        --mode multi_stage \
-                                                        --loss_term end_to_end\
+                                                        --mode end_to_end \
+                                                        --loss_term end_to_end \
                                                         --stage transformer \
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
@@ -298,15 +298,15 @@ if True:
 
         # elif args.exp == 5:
             Schedule.append("python buffer_metrics.py \
-                                                        --mode end_to_end \
-                                                        --loss_term end_to_end \
+                                                        --mode multi_stage \
+                                                        --loss_term end_to_end\
                                                         --stage cnn \
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
             Schedule.append("python buffer_metrics.py \
-                                                        --mode end_to_end \
-                                                        --loss_term end_to_end \
+                                                        --mode multi_stage \
+                                                        --loss_term end_to_end\
                                                         --stage transformer \
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))

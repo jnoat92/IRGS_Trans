@@ -6,9 +6,9 @@ exp=1   # multi-stage-cnn                 time --> 5.5 min per epoch (02:55:00 f
 
 # exp=3   # multi-stage-transformer         time --> 1.236hrs per epoch (65:00:00 for 50 epochs)    trained & tested!  beluga (def-l44xu-ab)
 
-# exp=4   # multi-stage-loss-end-to-end     time --> 1.236hrs per epoch (65:00:00 for 50 epochs)    trained & tested!  beluga (def-dclausi) 
+# exp=4   # End-to-end loss-end-to-end      time --> 1.236hrs per epoch (65:00:00 for 50 epochs)    trained & tested!  beluga (def-l44xu-ab) 
 
-# exp=5   # End-to-end loss-end-to-end      time --> 1.236hrs per epoch (65:00:00 for 50 epochs)    trained & tested!  beluga (def-l44xu-ab) 
+# exp=5   # multi-stage-loss-end-to-end     time --> 1.236hrs per epoch (65:00:00 for 50 epochs)    trained & tested!  beluga (def-dclausi) 
 
 
 # # train
