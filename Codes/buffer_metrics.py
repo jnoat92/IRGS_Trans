@@ -102,7 +102,7 @@ if __name__ == '__main__':
         contour_mask = np.zeros_like(test_data.gts)
         contour_mask[contours[:,0], contours[:,1]] = 1
 
-        for width in range(10, 20):
+        for width in range(0, 20):
 
             edge_buffer = np.uint8(binary_dilation(contour_mask, disk(width)))
             edge_buffer[landmask_idx] = 0

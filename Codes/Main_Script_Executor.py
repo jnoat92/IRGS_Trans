@@ -311,6 +311,24 @@ if True:
                                                         --test_path " + test_scene + " \
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
+    
+    elif args.train == 3:
+        # TEST
+        # elif args.exp == 4:
+            Schedule.append("python combine_outputs.py \
+                                                        --mode end_to_end \
+                                                        --loss_term end_to_end \
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
+
+        # elif args.exp == 5:
+            Schedule.append("python combine_outputs.py \
+                                                        --mode multi_stage \
+                                                        --loss_term end_to_end\
+                                                        --test_path " + test_scene + " \
+                                                        --model_name " + "model_{}".format(str(model_id))
+                            )
 
 
     # # Schedule.append("python major_voting.py   --scene " + test_scene)
