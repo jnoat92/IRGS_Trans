@@ -5,7 +5,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import multiprocessing
 from functools import partial
-
+from skimage.measure import find_contours
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, jaccard_score, f1_score, accuracy_score
 import csv
 import time
@@ -266,3 +266,13 @@ def time_format(sec):
    min = sec // 60
    sec %= 60
    return "%02d:%02d:%02d" % (hour, min, sec) 
+
+def get_contours(lbl):
+    for lvl in np.unique(lbl):
+        level_ctrs = find_contours(lbl, level=lvl)
+        for c in level_ctrs:
+            try:
+                contours = np.concatenate((contours, c), axis=0)
+            except:
+                contours = c
+    return np.uint16(contours)

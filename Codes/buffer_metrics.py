@@ -12,22 +12,12 @@ import wandb
 from utils.dataloader import RadarSAT2_Dataset
 import numpy as np
 from skimage.morphology import disk, binary_dilation
-from skimage.measure import find_contours
+
 import matplotlib.pyplot as plt
 from PIL import Image
 from sklearn.metrics import accuracy_score
-from utils.utils import Metrics
+from utils.utils import Metrics, get_contours
 import csv
-
-def get_contours(lbl):
-    for lvl in np.unique(lbl):
-        level_ctrs = find_contours(lbl, level=lvl)
-        for c in level_ctrs:
-            try:
-                contours = np.concatenate((contours, c), axis=0)
-            except:
-                contours = c
-    return np.uint16(contours)
 
 
 if __name__ == '__main__':
