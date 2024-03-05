@@ -253,7 +253,7 @@ if True:
                             )
 
     elif args.train == 2:
-        # TEST
+        # BUFFER METRICS
         # if   args.exp == 1:
             Schedule.append("python buffer_metrics.py \
                                                         --mode multi_stage \
@@ -313,7 +313,7 @@ if True:
                             )
     
     elif args.train == 3:
-        # TEST
+        # COMBINE OUTPUTS
         # elif args.exp == 4:
             Schedule.append("python combine_outputs.py \
                                                         --mode end_to_end \

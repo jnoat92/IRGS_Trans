@@ -16,8 +16,13 @@ from skimage.morphology import disk, binary_dilation
 import matplotlib.pyplot as plt
 from PIL import Image
 from sklearn.metrics import accuracy_score
-from utils.utils import Metrics, get_contours
+from utils.utils import Metrics, get_contours, hex_to_rgb
+from mycolorpy import colorlist as mcp
 import csv
+
+colors = mcp.gen_color(cmap="jet", n=256)
+colors_rgb = np.asarray([hex_to_rgb(i) for i in colors])
+
 
 
 if __name__ == '__main__':
@@ -78,8 +83,12 @@ if __name__ == '__main__':
     test_data =  RadarSAT2_Dataset(args, name = args.test_path[0], set_="test")
     landmask_idx = test_data.background==0
     probs_map = np.load(output_folder + '/probabilities_predict_%s.npy'%(args.stage))
-    pred_map = np.argmax(probs_map, 0)
+    # =========== SOFT-LABELS
+    colored_softlbl = np.uint8(colors_rgb[np.uint8(255*probs_map[1])])
+    colored_softlbl[landmask_idx] = [255, 255, 255]
+    Image.fromarray(colored_softlbl).save(output_folder + '/soft_lbl_%s.png'%(args.stage))
 
+    pred_map = np.argmax(probs_map, 0)
     if len(np.unique(test_data.gts[landmask_idx==0])) > 1:      # single class scenes don't show edges
 
         output_folder = os.path.join(output_folder, 'buffers')
@@ -87,7 +96,7 @@ if __name__ == '__main__':
 
         wandb.init(project=project_name, name=args.stage, group=args.model_name, job_type='edge_buffer')
 
-        # =========== CREATE BUFFER
+        # =========== CREATE BUFFERS
         contours = get_contours(test_data.gts)
         contour_mask = np.zeros_like(test_data.gts)
         contour_mask[contours[:,0], contours[:,1]] = 1
@@ -96,17 +105,17 @@ if __name__ == '__main__':
 
             edge_buffer = np.uint8(binary_dilation(contour_mask, disk(width)))
             edge_buffer[landmask_idx] = 0
-            Image.fromarray(np.uint8(edge_buffer*255)).save(output_folder + '/edge_buffer_%d.png'%(width))
+            # Image.fromarray(np.uint8(edge_buffer*255)).save(output_folder + '/edge_buffer_%d.png'%(width))
 
             # =========== METRICS
             y_true = test_data.gts[edge_buffer==1]
             y_pred = pred_map[edge_buffer==1]
             acc, _ = Metrics(y_true, y_pred, None, None)
 
-            wandb.summary['buffer_%d_OA'%(width+1)] = acc
-            with open(output_folder + '/metrics_buffer.csv', 'a', encoding='UTF8', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(['buffer_%d_OA'%(width+1), acc])
+            wandb.summary['buffer_{:02d}_OA'.format(width+1)] = acc
+            # with open(output_folder + '/metrics_buffer.csv', 'a', encoding='UTF8', newline='') as f:
+            #     writer = csv.writer(f)
+            #     writer.writerow(['buffer_{:02d}_OA'.format(width+1), acc])
 
 
 #python buffer_metrics.py --mode multi_stage --loss_term cnn --stage cnn --test_path 20100605 --model_name model_4

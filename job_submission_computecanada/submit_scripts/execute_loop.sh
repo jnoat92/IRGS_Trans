@@ -27,10 +27,18 @@ exp=1   # multi-stage-cnn                 time --> 5.5 min per epoch (02:55:00 f
 #     sleep 5
 # done
 
-# buffer metrics
-for i in {0..32}
+# # buffer metrics
+# for i in {0..32}
+# do
+#     echo "calculating buffer metrics in model $i"
+#     sbatch buffer_job.sh $i 2 $exp
+#     sleep 5
+# done
+
+# Combine results (only for protocols 4 and 5)
+for i in 20 0 1 6 7 8 9 10 11 13 28 29 30 31 32
 do
     echo "calculating buffer metrics in model $i"
-    sbatch buffer_job.sh $i 2 $exp
+    sbatch combine_outputs_job.sh $i 3 $exp
     sleep 5
 done
