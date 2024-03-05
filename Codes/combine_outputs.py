@@ -14,12 +14,9 @@ import wandb
 from utils.dataloader import RadarSAT2_Dataset
 import numpy as np
 from skimage.morphology import disk, binary_dilation
-from skimage.measure import find_contours
 import matplotlib.pyplot as plt
 from PIL import Image
-from sklearn.metrics import accuracy_score
 from utils.utils import Metrics
-import csv
 
 if __name__ == '__main__':
 
@@ -100,7 +97,6 @@ if __name__ == '__main__':
                 y_pred = pred_map[edge_buffer[width]==1]
                 acc, _ = Metrics(y_true, y_pred, None, None)
                 wandb.summary['buffer_{:02d}_OA'.format(width+1)] = acc
-                # wandb.summary['buffer_%d_OA'%(width+1)] = acc
         
         wandb.finish()
 
