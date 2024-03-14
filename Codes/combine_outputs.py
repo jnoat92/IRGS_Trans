@@ -77,6 +77,12 @@ if __name__ == '__main__':
         # =========== COMBINED MAP
         wandb.init(project=project_name, name='%.1fcnn_%.1ftrans'%(i, 1-i), group=args.model_name, job_type='combine_score')
         combined_prob = i*cnn_probs_map + (1-i)*trans_probs_map
+        combined_map = np.argmax(combined_prob, axis=0)
+
+        # =========== HARD-LABELS
+        colored_hardlbl = test_data.class_colors[combined_map]
+        colored_hardlbl[landmask_idx] = [255, 255, 255]
+        Image.fromarray(colored_hardlbl).save(output_folder + '/%.1f_hard_lbl.png'%(i))
 
         # =========== SOFT-LABELS
         colored_softlbl = np.uint8(colors_rgb[np.uint8(255*combined_prob[1])])

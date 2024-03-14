@@ -4,34 +4,66 @@ Mar 13th, 2024
 '''
 
 import os
+from PIL import Image
 
 import glob
 
-folder_path = '../results_test/21-scenes-less_resolution'
-files = glob.glob(folder_path + '/**/*.png', recursive=True)
-files = sorted(files)
+folder_path = '../results_test'
 
-for i, f in enumerate(files)
+files_ = glob.glob(folder_path + '/**/*.png', recursive=True)
+
+files = []
+for i, f in enumerate(files_):
+    if 'buffers' not in f: files.append(f)
 
 scenes = []
 for f in files:
-    if 'Unet' in f and 'buffers' not in f: 
-        scenes.append(os.path.split(os.path.split(f)[0])[1])
+    if 'Unet' in f: scenes.append(os.path.split(os.path.split(f)[0])[1])
 scenes = sorted(list(set(scenes)))
 
 for scene in scenes:
-    scene_files = []
+    output_folder = os.path.join(folder_path, 'images_for_latex', scene)
+    os.makedirs(output_folder + '/soft-labels', exist_ok=True)
+    os.makedirs(output_folder + '/hard-labels', exist_ok=True)
+
     # =========== MATCH FILES
+    scene_files = []
     for f in files:
-        if scene in f and 'buffers' not in f: 
+        if scene in f: 
             scene_files.append(f)
     
-    # =========== GRAB HH, HV, GT, AND IRGS
-    for i in scene_files: print(i)
-    break
+    for i in scene_files: 
+        if 'Unet' in i:
+        # =========== HH, HV, GT, AND IRGS
+            if 'HH.png' in i: Image.open(i).save(output_folder + '/HH.pdf')
+            elif 'HV.png' in i: Image.open(i).save(output_folder + '/HV.pdf')
+            elif 'colored_gts.png' in i: Image.open(i).save(output_folder + '/GT.pdf')
+            elif 'colored_irgs_output.png' in i: Image.open(i).save(output_folder + '/IRGS.pdf')
+        # =========== P1
+            elif 'colored_predict_cnn.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P1.pdf')
+            elif 'soft_lbl_cnn.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P1.pdf')
+        # =========== P2
+        elif 'end_to_end/Loss_transformer' in i:
+            if 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P2.pdf')
+            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P2.pdf')
+        # =========== P3
+        elif 'multi_stage/Loss_transformer' in i:
+            if 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P3.pdf')
+            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P3.pdf')
+        # =========== P4
+        elif 'end_to_end/Loss_end_to_end' in i:
+            if 'colored_predict_cnn.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P4_cnn.pdf')
+            elif 'soft_lbl_cnn.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P4_cnn.pdf')
+            elif 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P4_trans.pdf')
+            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P4_trans.pdf')
+            elif 'combined output/0.7_hard_lbl.png' in i: Image.open(i).save(output_folder + '/hard-labels/P4_comb.pdf')
+            elif 'combined output/0.7_soft_lbl.png' in i: Image.open(i).save(output_folder + '/soft-labels/P4_comb.pdf')
+        # =========== P5
+        elif 'multi_stage/Loss_end_to_end' in i:
+            if 'colored_predict_cnn.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P5_cnn.pdf')
+            elif 'soft_lbl_cnn.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P5_cnn.pdf')
+            elif 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P5_trans.pdf')
+            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P5_trans.pdf')
+            elif 'combined output/0.7_hard_lbl.png' in i: Image.open(i).save(output_folder + '/hard-labels/P5_comb.pdf')
+            elif 'combined output/0.7_soft_lbl.png' in i: Image.open(i).save(output_folder + '/soft-labels/P5_comb.pdf')
 
-'''
-results_test/21-scenes-less_resolution/Unet/model_0/20100418/CNN_colored_m_v_per_CC.png
-
-results_test/21-scenes-less_resolution/IRGS_trans_superpixels/end_to_end/Loss_end_to_end/model_0/20100418/cnn/colored_gts.png
-'''
