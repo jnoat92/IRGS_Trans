@@ -35,35 +35,35 @@ for scene in scenes:
     for i in scene_files: 
         if 'Unet' in i:
         # =========== HH, HV, GT, AND IRGS
-            if 'HH.png' in i: Image.open(i).save(output_folder + '/HH.pdf')
-            elif 'HV.png' in i: Image.open(i).save(output_folder + '/HV.pdf')
-            elif 'colored_gts.png' in i: Image.open(i).save(output_folder + '/GT.pdf')
-            elif 'colored_irgs_output.png' in i: Image.open(i).save(output_folder + '/IRGS.pdf')
+            if 'HH.png' in i: Image.open(i).save(output_folder + '/HH.png')
+            elif 'HV.png' in i: Image.open(i).save(output_folder + '/HV.png')
+            elif 'colored_gts.png' in i: Image.open(i).save(output_folder + '/GT.png')
+            elif 'colored_irgs_output.png' in i: Image.open(i).save(output_folder + '/IRGS.png')
         # =========== P1
-            elif 'colored_predict_cnn.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P1.pdf')
-            elif 'soft_lbl_cnn.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P1.pdf')
+            elif 'colored_predict_cnn.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P1.png')
+            elif 'soft_lbl_cnn.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P1.png')
         # =========== P2
         elif 'end_to_end/Loss_transformer' in i:
-            if 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P2.pdf')
-            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P2.pdf')
+            if 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P2.png')
+            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P2.png')
         # =========== P3
         elif 'multi_stage/Loss_transformer' in i:
-            if 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P3.pdf')
-            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P3.pdf')
+            if 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P3.png')
+            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P3.png')
         # =========== P4
         elif 'end_to_end/Loss_end_to_end' in i:
-            if 'colored_predict_cnn.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P4_cnn.pdf')
-            elif 'soft_lbl_cnn.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P4_cnn.pdf')
-            elif 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P4_trans.pdf')
-            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P4_trans.pdf')
-            elif 'combined output/0.7_hard_lbl.png' in i: Image.open(i).save(output_folder + '/hard-labels/P4_comb.pdf')
-            elif 'combined output/0.7_soft_lbl.png' in i: Image.open(i).save(output_folder + '/soft-labels/P4_comb.pdf')
+            if 'colored_predict_cnn.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P4_cnn.png')
+            elif 'soft_lbl_cnn.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P4_cnn.png')
+            elif 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P4_trans.png')
+            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P4_trans.png')
+            elif 'combined output/0.7_hard_lbl.png' in i: Image.open(i).save(output_folder + '/hard-labels/P4_comb.png')
+            elif 'combined output/0.7_soft_lbl.png' in i: Image.open(i).save(output_folder + '/soft-labels/P4_comb.png')
         # =========== P5
         elif 'multi_stage/Loss_end_to_end' in i:
-            if 'colored_predict_cnn.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P5_cnn.pdf')
-            elif 'soft_lbl_cnn.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P5_cnn.pdf')
-            elif 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P5_trans.pdf')
-            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P5_trans.pdf')
-            elif 'combined output/0.7_hard_lbl.png' in i: Image.open(i).save(output_folder + '/hard-labels/P5_comb.pdf')
-            elif 'combined output/0.7_soft_lbl.png' in i: Image.open(i).save(output_folder + '/soft-labels/P5_comb.pdf')
+            if 'colored_predict_cnn.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P5_cnn.png')
+            elif 'soft_lbl_cnn.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P5_cnn.png')
+            elif 'colored_predict_transformer.png'  in i: Image.open(i).save(output_folder + '/hard-labels/P5_trans.png')
+            elif 'soft_lbl_transformer.png'         in i: Image.open(i).save(output_folder + '/soft-labels/P5_trans.png')
+            elif 'combined output/0.7_hard_lbl.png' in i: Image.open(i).save(output_folder + '/hard-labels/P5_comb.png')
+            elif 'combined output/0.7_soft_lbl.png' in i: Image.open(i).save(output_folder + '/soft-labels/P5_comb.png')
 
