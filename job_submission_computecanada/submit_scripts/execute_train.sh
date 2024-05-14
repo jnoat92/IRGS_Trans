@@ -18,7 +18,7 @@
 echo "No. of task per node: $SLURM_NTASKS"
 
 module purge
-module load python/3.9.6
+module load StdEnv/2020 python/3.9.6
 module load cuda        # in case of using numba library
 
 #module load scipy-stack

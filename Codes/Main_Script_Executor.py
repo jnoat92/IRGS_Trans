@@ -254,7 +254,7 @@ if True:
 
     elif args.train == 2:
         # BUFFER METRICS
-        # if   args.exp == 1:
+        if   args.exp == 1:
             Schedule.append("python buffer_metrics.py \
                                                         --mode multi_stage \
                                                         --loss_term cnn \
@@ -263,7 +263,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-        # elif args.exp == 2:
+        elif args.exp == 2:
             Schedule.append("python buffer_metrics.py \
                                                         --mode end_to_end \
                                                         --loss_term transformer \
@@ -272,7 +272,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-        # elif args.exp == 3:
+        elif args.exp == 3:
             Schedule.append("python buffer_metrics.py \
                                                         --mode multi_stage \
                                                         --loss_term transformer \
@@ -280,7 +280,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
         
-        # elif args.exp == 4:
+        elif args.exp == 4:
             Schedule.append("python buffer_metrics.py \
                                                         --mode end_to_end \
                                                         --loss_term end_to_end \
@@ -296,7 +296,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-        # elif args.exp == 5:
+        elif args.exp == 5:
             Schedule.append("python buffer_metrics.py \
                                                         --mode multi_stage \
                                                         --loss_term end_to_end\
@@ -314,7 +314,7 @@ if True:
     
     elif args.train == 3:
         # COMBINE OUTPUTS
-        # elif args.exp == 4:
+        if args.exp == 4:
             Schedule.append("python combine_outputs.py \
                                                         --mode end_to_end \
                                                         --loss_term end_to_end \
@@ -322,7 +322,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-        # elif args.exp == 5:
+        elif args.exp == 5:
             Schedule.append("python combine_outputs.py \
                                                         --mode multi_stage \
                                                         --loss_term end_to_end\
@@ -332,7 +332,7 @@ if True:
 
     elif args.train == 4:
         # UNCERTAINTY METRICS
-        # if   args.exp == 1:
+        if   args.exp == 1:
             Schedule.append("python uncertainty_metrics.py \
                                                         --mode multi_stage \
                                                         --loss_term cnn \
@@ -341,7 +341,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-        # elif args.exp == 2:
+        elif args.exp == 2:
             Schedule.append("python uncertainty_metrics.py \
                                                         --mode end_to_end \
                                                         --loss_term transformer \
@@ -350,7 +350,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-        # elif args.exp == 3:
+        elif args.exp == 3:
             Schedule.append("python uncertainty_metrics.py \
                                                         --mode multi_stage \
                                                         --loss_term transformer \
@@ -358,7 +358,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
         
-        # elif args.exp == 4:
+        elif args.exp == 4:
             Schedule.append("python uncertainty_metrics.py \
                                                         --mode end_to_end \
                                                         --loss_term end_to_end \
@@ -374,7 +374,7 @@ if True:
                                                         --model_name " + "model_{}".format(str(model_id))
                             )
 
-        # elif args.exp == 5:
+        elif args.exp == 5:
             Schedule.append("python uncertainty_metrics.py \
                                                         --mode multi_stage \
                                                         --loss_term end_to_end\
