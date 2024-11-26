@@ -123,10 +123,56 @@ def Arguments_test():
     parser.add_argument('--model_name', type=str, default='model')
     # ===================================================
 
-    
     parser.add_argument('--CNN', type=str, default='UNet', help='CNN backbone')
 
     args = parser.parse_args()
+
+    # SOME CONFIG TO DEBUG THE CODE
+    # DO NOT FORGET TO COMMENT
+    # U-Net
+    # args.mode = 'multi_stage'
+    # args.loss_term = 'cnn'
+    # args.stage = 'cnn'
+    # args.test_path = '20101003'
+    # args.model_name = 'model_14'
+    # # ITT
+    # args.mode = 'end_to_end'
+    # args.loss_term = 'end_to_end'
+    # args.stage = 'cnn'
+    # args.test_path = '20101003'
+    # args.model_name = 'model_14'
+    # ITT
+    # args.mode = 'end_to_end'
+    # args.loss_term = 'end_to_end'
+    # args.stage = 'transformer'
+    # args.test_path = '20101003'
+    # args.model_name = 'model_14'
+    # # # ITT + U-Net
+    # args.mode = 'multi_stage'
+    # args.loss_term = 'end_to_end'
+    # args.stage = 'cnn'
+    # args.test_path = '20101003'
+    # args.model_name = 'model_14'
+    # # # ITT + U-Net
+    # args.mode = 'multi_stage'
+    # args.loss_term = 'end_to_end'
+    # args.stage = 'transformer'
+    # args.test_path = '20101003'
+    # args.model_name = 'model_14'
+
+    # # P2
+    # args.mode = 'end_to_end'
+    # args.loss_term = 'transformer'
+    # args.stage = 'transformer'
+    # args.test_path = '20101003'
+    # args.model_name = 'model_14'
+    # # P3
+    # args.mode = 'multi_stage'
+    # args.loss_term = 'transformer'
+    # args.test_path = '20101003'
+    # args.model_name = 'model_14'
+
+
     args.Datasets_dir += '/' + args.Dataset_name + '/'
     args.test_path = args.test_path.split('_')
 
