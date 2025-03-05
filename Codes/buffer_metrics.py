@@ -29,6 +29,12 @@ if __name__ == '__main__':
 
     args = Arguments_test()
 
+    # args.mode = 'multi_stage'
+    # args.loss_term = 'cnn'
+    # args.stage = 'cnn'
+    # args.test_path = ['20100524']
+    # args.model_name = 'model_3'
+
     if args.stage == 'cnn' and args.mode == 'end_to_end' and args.loss_term == 'transformer':
         raise AssertionError("Model trained using ONLY TRANSFORMER LOSS does not work for the cnn prediction")
 
@@ -110,9 +116,11 @@ if __name__ == '__main__':
             # =========== METRICS
             y_true = test_data.gts[edge_buffer==1]
             y_pred = pred_map[edge_buffer==1]
-            acc, _ = Metrics(y_true, y_pred, None, None)
+            acc, IoU = Metrics(y_true, y_pred, None, None)
 
             wandb.summary['buffer_{:02d}_OA'.format(width+1)] = acc
+            wandb.summary['buffer_{:02d}_IoU0'.format(width+1)] = IoU[0]
+            wandb.summary['buffer_{:02d}_IoU1'.format(width+1)] = IoU[1]
             # with open(output_folder + '/metrics_buffer.csv', 'a', encoding='UTF8', newline='') as f:
             #     writer = csv.writer(f)
             #     writer.writerow(['buffer_{:02d}_OA'.format(width+1), acc])

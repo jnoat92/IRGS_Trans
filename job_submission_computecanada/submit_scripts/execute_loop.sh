@@ -16,7 +16,7 @@ exp=1   # multi-stage-cnn                 time --> 5.5 min per epoch (02:55:00 f
 # do
 #     echo "executing train in model $i"
 #     sbatch execute_train.sh $i 0 $exp
-#     sleep 5
+#     sleep 2
 # done
 
 # # test
@@ -24,29 +24,29 @@ exp=1   # multi-stage-cnn                 time --> 5.5 min per epoch (02:55:00 f
 # do
 #     echo "executing test in model $i"
 #     sbatch execute_test.sh $i 1 $exp
-#     sleep 5
+#     sleep 2
 # done
 
-# # buffer metrics
-# for i in {0..32}
-# do
-#     echo "calculating buffer metrics in model $i"
-#     sbatch buffer_job.sh $i 2 $exp
-#     sleep 5
-# done
+# buffer metrics
+for i in {0..32}
+do
+    echo "calculating buffer metrics in model $i"
+    sbatch buffer_job.sh $i 2 $exp
+    sleep 2
+done
 
 # # Combine results (only for protocols 4 and 5)
 # for i in {0..32}
 # do
 #     echo "combine_outputs_job in model $i"
 #     sbatch combine_outputs_job.sh $i 3 $exp
-#     sleep 5
+#     sleep 2
 # done
 
-# Calculate uncertainty metrics
-for i in {0..32}
-do
-    echo "uncertainty_metrics_job in model $i"
-    sbatch uncertainty_metrics_job.sh $i 4 $exp
-    sleep 5
-done
+# # Calculate uncertainty metrics
+# for i in {0..32}
+# do
+#     echo "uncertainty_metrics_job in model $i"
+#     sbatch uncertainty_metrics_job.sh $i 4 $exp
+#     sleep 2
+# done
