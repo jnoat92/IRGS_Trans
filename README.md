@@ -16,7 +16,7 @@ Features:
 
 ## Dependencies
 - All dependencies can be found in [create_virtualenv.sh](job_submission_computecanada/submit_scripts/create_virtualenv.sh)
-- The MAGIC library python wrapper, used to precompute the homogeneous regions, is not publicly available due to existing licensing conflicts that need to be addressed. Instead, any other unsupervised segmentation method can be used for ITT.
+- The MAGIC library python wrapper used to pre-compute homogeneous regions is not publicly available due to existing licensing conflicts that need to be addressed. Instead, any other unsupervised segmentation method can be used for ITT.
 
 ## Running the code
 
