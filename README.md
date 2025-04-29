@@ -2,7 +2,7 @@
 
 This is the code base for the paper *ITT: Long-range Spatial Dependencies for Sea Ice Semantic Segmentation*
 
-Contributions:
+Features:
 
 - Combination of CNNs, transformers, and unsupervised segmentation to successfully classify ice and open water in SAR images. 
 
@@ -15,4 +15,19 @@ Contributions:
 ![](ITT_architecture.png)
 
 ## Dependencies
-All dependencies can be found in [create_virtualenv.sh](job_submission_computecanada/submit_scripts/create_virtualenv.sh)
+- All dependencies can be found in [create_virtualenv.sh](job_submission_computecanada/submit_scripts/create_virtualenv.sh)
+- The MAGIC library python wrapper is not publicly available due to existing licensing conflicts that need to be addressed. Instead, any other unsupervised segmentation method can be used for ITT.
+
+## Running the code
+
+- The file [Main_Script_Executor.py](Codes/Main_Script_Executor.py) contains the commands to be executed for each experiment.
+- This code was run on infrastructure provided by the Digital Research Alliance of Canada, that supports [SLURM](https://slurm.schedmd.com/documentation.html) for resource management. In case multiple GPUs are available to run the code, the [MULTIPLE GPU SETUP](https://github.com/jnoat92/ITT_sea_ice/blob/13ab3db8feef7a5ec478f37d1d94d440d5e4a54f/Codes/train_IRGS_trans_EndToEnd.py#L377) section will need to be modified if the hardware does not support SLURM.
+
+
+## Results
+
+## Acknowledgments
+
+## How to cite
+
+*To be completed after publication*
