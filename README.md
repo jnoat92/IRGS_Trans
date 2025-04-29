@@ -14,4 +14,5 @@ Contributions:
 
 ![](ITT_architecture.png)
 
-## Dpendencies
+## Dependencies
+All dependencies can be found in [create_virtualenv.sh](job_submission_computecanada/submit_scripts/create_virtualenv.sh)
