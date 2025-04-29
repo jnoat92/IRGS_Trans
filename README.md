@@ -1,6 +1,6 @@
 # ITT: Irregular Tokens on Transformers
 
-This is the code base for the paper ITT: Long-range Spatial Dependencies for Sea Ice Semantic Segmentation
+This is the code base for the paper *ITT: Long-range Spatial Dependencies for Sea Ice Semantic Segmentation*
 
 Contributions:
 
@@ -13,3 +13,5 @@ Contributions:
 - The code includes the experimental protocols employing dual-polarized images from the RADARSAT-2 sensor.
 
 ![](ITT_architecture.png)
+
+## Dpendencies
