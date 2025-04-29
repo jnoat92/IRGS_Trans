@@ -12,4 +12,4 @@ Contributions:
 
 - The code includes the experimental protocols employing dual-polarized images from the RADARSAT-2 sensor.
 
-![](assets/ITT_architecture.png)
+![](ITT_architecture.png)
