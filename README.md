@@ -11,3 +11,4 @@ Contributions:
 - This method constitutes the first attempt to uniquely implement self-attention on tokens extracted from irregular, homogeneous, and multi-scale regions within the input image.
 
 - The code includes the experimental protocols employing dual-polarized images from the RADARSAT-2 sensor.
+
