@@ -27,6 +27,7 @@ Features:
 ## Results
 
 ## Acknowledgments
+We would like to thank the Canadian Ice Service (CIS) for the data provision and the Digital Research Alliance of Canada (DRAC) for the computing resources. This work has been supported by the Natural Sciences and Engineering Research Council of Canada (NSERC). A special thank you to [Max Manning](https://github.com/Max-Manning) for facilitating access to the MAGIC Python library.
 
 ## How to cite
 
