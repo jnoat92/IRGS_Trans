@@ -32,4 +32,7 @@ We would like to thank the Canadian Ice Service (CIS) for the data provision and
 
 ## How to cite
 
-*To be completed after publication*
+J. N. Turnes, M. Jiang, S. Taleghanidoozdoozan, L. Xu and D. A. Clausi, "ITT: Long-range Spatial Dependencies for Sea Ice Semantic Segmentation," in IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, doi: 10.1109/JSTARS.2025.3570896.
+keywords: {Ice;Sea ice;Radar polarimetry;Transformers;Feature extraction;Semantic segmentation;Histograms;Training;Synthetic aperture radar;Sensors;sea ice classification;transformers;irregular tokens;unsupervised segmentation},
+
+
